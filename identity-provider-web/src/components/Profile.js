@@ -27,7 +27,7 @@ function Profile() {
                 return;
             }
 
-            const response = await authService.getUser(storedUser.userId);
+            const response = await authService.getUser(storedUser.id);
             setUser(response.data);
             setFormData({
                 firstName: response.data.firstName || '',
@@ -55,7 +55,7 @@ function Profile() {
 
         try {
             const storedUser = JSON.parse(localStorage.getItem('user'));
-            await authService.updateUser(storedUser.userId, formData);
+            await authService.updateUser(storedUser.id, formData);
             setSuccess('Profil mis à jour avec succès');
             setEditing(false);
             loadUserData();
