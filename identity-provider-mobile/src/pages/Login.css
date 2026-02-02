@@ -1,0 +1,41 @@
+.login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.login-header p {
+    color: var(--ion-color-medium);
+    font-size: 1.1rem;
+}
+
+.error-message {
+    text-align: center;
+    padding: 1rem;
+    background-color: rgba(var(--ion-color-danger-rgb), 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.login-button {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+ion-item {
+    margin-bottom: 1rem;
+}

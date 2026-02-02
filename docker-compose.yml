@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: identity-provider-postgres
+    environment:
+      POSTGRES_DB: identity_provider
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - identity-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Serveur de cartes Offline (OpenStreetMap Tile Server)
+  tile-server:
+    image: overv/openstreetmap-tile-server:latest
+    container_name: identity-provider-tile-server
+    ports:
+      - "8081:80"
+    volumes:
+      - osm_data:/data/database
+      - osm_tiles:/data/tiles
+    environment:
+      THREADS: 4
+      OSM2PGSQL_EXTRA_ARGS: "-C 4096"
+    networks:
+      - identity-network
+    command: run
+    shm_size: 2gb
+
+volumes:
+  postgres_data:
+    driver: local
+  osm_data:
+    driver: local
+  osm_tiles:
+    driver: local
+
+networks:
+  identity-network:
+    driver: bridge
