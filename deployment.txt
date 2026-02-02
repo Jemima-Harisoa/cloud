@@ -1,0 +1,11 @@
+# Terminal 1: Backend
+cd identity-provider-backend
+java -jar target/identity-provider-backend-1.0.0.jar
+
+# Terminal 2: Frontend Web
+cd identity-provider-web
+npm start  # http://localhost:3000
+
+# Terminal 3: Frontend Mobile
+cd identity-provider-mobile
+npm run dev  # http://localhost:5173

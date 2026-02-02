@@ -1,0 +1,21 @@
+# Ignorer les modules Node.js
+identity-provider-web/node_modules/
+identity-provider-mobile/node_modules/
+
+# Ignorer les fichiers générés par Maven
+identity-provider-backend/target/
+
+# Ignorer les fichiers de configuration locaux
+*.env
+*.local
+
+# Ignorer les fichiers temporaires
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Ignorer les fichiers de test
+cypress/screenshots/
+cypress/videos/
+
