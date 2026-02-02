@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +36,10 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
-        // Vérifier si l'email existe déjà
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AuthenticationException("Un compte avec cet email existe déjà");
         }
 
-        // Créer le nouvel utilisateur
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -62,10 +63,7 @@ public class AuthService {
 
         user = userRepository.save(user);
 
-        // Générer le token
         String token = jwtTokenProvider.generateToken(user.getEmail(), user.getId());
-
-        // Créer la session
         createSession(user, token);
 
         return new AuthResponse(token, mapToUserResponse(user));
@@ -73,30 +71,23 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Trouver l'utilisateur
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Email ou mot de passe incorrect"));
 
-        // Vérifier si l'utilisateur est bloqué
         if (user.getIsBlocked()) {
             throw new UserBlockedException("Votre compte est bloqué. Contactez l'administrateur.");
         }
 
-        // Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             handleFailedLogin(user);
             throw new AuthenticationException("Email ou mot de passe incorrect");
         }
 
-        // Réinitialiser les tentatives échouées
         user.setFailedLoginAttempts(0);
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
-        // Générer le token
         String token = jwtTokenProvider.generateToken(user.getEmail(), user.getId());
-
-        // Créer la session
         createSession(user, token);
 
         return new AuthResponse(token, mapToUserResponse(user));
@@ -116,25 +107,17 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
 
-        if (request.getFirstName() != null) {
-            user.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            user.setLastName(request.getLastName());
-        }
-        if (request.getPhoneNumber() != null) {
-            user.setPhoneNumber(request.getPhoneNumber());
-        }
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
 
         user = userRepository.save(user);
-
         return mapToUserResponse(user);
     }
 
     public UserResponse getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
-
         return mapToUserResponse(user);
     }
 
@@ -148,10 +131,10 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public java.util.List<UserResponse> getBlockedUsers() {
+    public List<UserResponse> getBlockedUsers() {
         return userRepository.findByIsBlocked(true).stream()
                 .map(this::mapToUserResponse)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     private void handleFailedLogin(User user) {
