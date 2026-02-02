@@ -49,6 +49,17 @@ public class AuthService {
         user.setIsBlocked(false);
         user.setFailedLoginAttempts(0);
 
+        // Définir le rôle sélectionné (par défaut USER si non spécifié)
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            try {
+                user.setRole(com.identityprovider.entity.UserRole.valueOf(request.getRole().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                user.setRole(com.identityprovider.entity.UserRole.USER);
+            }
+        } else {
+            user.setRole(com.identityprovider.entity.UserRole.USER);
+        }
+
         user = userRepository.save(user);
 
         // Générer le token

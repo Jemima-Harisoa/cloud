@@ -10,6 +10,7 @@ function Register() {
         firstName: '',
         lastName: '',
         phoneNumber: '',
+        role: 'USER',
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
@@ -108,6 +109,23 @@ function Register() {
                                 placeholder="Nom"
                             />
                         </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Rôle *</label>
+                        <select
+                            name="role"
+                            className="form-input"
+                            value={formData.role}
+                            onChange={handleChange}
+                            required
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <option value="USER">Client (Utilisateur)</option>
+                            <option value="MANAGER">Administrateur (Manager)</option>
+                            <option value="VISITOR">Visiteur</option>
+                        </select>
+                        {errors.role && <div className="form-error">{errors.role}</div>}
                     </div>
 
                     <div className="form-group">
