@@ -1,3 +1,10 @@
+2) Modules cartes: 
+Installer un serveur de carte Offline sur Docker
+Télécharger la ville d’Antananarivo avec les rues
+Utiliser leaflet pour afficher/manipuler la carte dans l’application web
+
+mitélécharge tuile an Antananarivo sur le net, format osm.pbf zay de image docker openstreetmap. De aveo iny no anamboarana container, de refa mapiasa anle leaflet am web de le container no tifirina 
+
 Le projet est:
 Mettre en place un projet de fournisseur d’identité sur java . Pour le serveur backend, API seulement (sans insterface) genre webService et pour le frontend, on une version web et une version mobile:
 pour le web, on utilise react (c'est un web avec interface)

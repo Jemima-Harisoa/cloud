@@ -36,6 +36,7 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private UserRole role = UserRole.USER;
     
     @Column(name = "created_at")
@@ -45,12 +46,15 @@ public class User {
     private LocalDateTime updatedAt;
     
     @Column(name = "is_active")
+    @Builder.Default
     private Boolean isActive = true;
     
     @Column(name = "is_blocked")
+    @Builder.Default
     private Boolean isBlocked = false;
     
     @Column(name = "failed_login_attempts")
+    @Builder.Default
     private Integer failedLoginAttempts = 0;
     
     @Column(name = "blocked_until")

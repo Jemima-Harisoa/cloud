@@ -59,16 +59,17 @@ public class RoadIssueService {
         User reporter = userRepository.findById(reporterId)
                 .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
 
-        RoadIssue issue = new RoadIssue();
-        issue.setLatitude(request.getLatitude());
-        issue.setLongitude(request.getLongitude());
-        issue.setDescription(request.getDescription());
-        issue.setStatus(request.getStatus() != null ? request.getStatus() : RoadIssue.IssueStatus.NOUVEAU);
-        issue.setSurfaceM2(request.getSurfaceM2());
-        issue.setBudget(request.getBudget());
-        issue.setCompanyName(request.getCompanyName());
-        issue.setPhotoUrl(request.getPhotoUrl());
-        issue.setReporter(reporter);
+        RoadIssue issue = RoadIssue.builder()
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .description(request.getDescription())
+                .status(request.getStatus() != null ? request.getStatus() : RoadIssue.IssueStatus.NOUVEAU)
+                .surfaceM2(request.getSurfaceM2())
+                .budget(request.getBudget())
+                .companyName(request.getCompanyName())
+                .photoUrl(request.getPhotoUrl())
+                .reporter(reporter)
+                .build();
 
         RoadIssue savedIssue = roadIssueRepository.save(issue);
         return convertToResponse(savedIssue);
