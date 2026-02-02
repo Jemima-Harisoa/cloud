@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/api';
+import '../styles/modern-design.css';
 
 function Register() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        confirmPassword: '',
         firstName: '',
         lastName: '',
-        phoneNumber: '',
-        role: 'USER',
     });
-    const [errors, setErrors] = useState({});
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
@@ -24,41 +24,96 @@ function Register() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors({});
+        setError('');
+
+        if (formData.password !== formData.confirmPassword) {
+            setError('Les mots de passe ne correspondent pas');
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            setError('Le mot de passe doit contenir au moins 6 caractères');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            const response = await authService.register(formData);
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data));
-            navigate('/dashboard');
-        } catch (err) {
-            if (err.response?.data) {
-                setErrors(err.response.data);
+            const response = await authService.register({
+                email: formData.email,
+                password: formData.password,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+            });
+
+            if (response.data?.token) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                navigate('/user-dashboard');
             } else {
-                setErrors({ general: 'Erreur lors de l\'inscription' });
+                setError('Erreur: Token non reçu');
             }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Erreur lors de l\'inscription');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div className="card" style={{ maxWidth: '500px', width: '100%' }}>
-                <h2 className="card-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    Inscription
-                </h2>
+        <div className="flex-center" style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '16px' }}>
+            <div className="form-container">
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                    <div style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#10b981',
+                        letterSpacing: '-0.5px',
+                        fontFamily: 'Georgia, serif',
+                        marginBottom: '12px',
+                    }}>
+                        signal.eo
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>Créer un compte</p>
+                </div>
 
-                {errors.general && (
-                    <div className="alert alert-error">
-                        {errors.general}
+                {error && (
+                    <div className="alert alert-error" style={{ marginBottom: '16px' }}>
+                        {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Prénom</label>
+                            <input
+                                type="text"
+                                name="firstName"
+                                className="form-input"
+                                value={formData.firstName}
+                                onChange={handleChange}
+                                required
+                                placeholder="Jean"
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">Nom</label>
+                            <input
+                                type="text"
+                                name="lastName"
+                                className="form-input"
+                                value={formData.lastName}
+                                onChange={handleChange}
+                                required
+                                placeholder="Dupont"
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
-                        <label className="form-label">Email *</label>
+                        <label className="form-label">Email</label>
                         <input
                             type="email"
                             name="email"
@@ -68,11 +123,10 @@ function Register() {
                             required
                             placeholder="votre@email.com"
                         />
-                        {errors.email && <div className="form-error">{errors.email}</div>}
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Mot de passe *</label>
+                        <label className="form-label">Mot de passe</label>
                         <input
                             type="password"
                             name="password"
@@ -80,82 +134,50 @@ function Register() {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            placeholder="Minimum 6 caractères"
+                            placeholder="••••••••"
                         />
-                        {errors.password && <div className="form-error">{errors.password}</div>}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="form-group">
-                            <label className="form-label">Prénom</label>
-                            <input
-                                type="text"
-                                name="firstName"
-                                className="form-input"
-                                value={formData.firstName}
-                                onChange={handleChange}
-                                placeholder="Prénom"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Nom</label>
-                            <input
-                                type="text"
-                                name="lastName"
-                                className="form-input"
-                                value={formData.lastName}
-                                onChange={handleChange}
-                                placeholder="Nom"
-                            />
-                        </div>
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Rôle *</label>
-                        <select
-                            name="role"
+                        <label className="form-label">Confirmer mot de passe</label>
+                        <input
+                            type="password"
+                            name="confirmPassword"
                             className="form-input"
-                            value={formData.role}
+                            value={formData.confirmPassword}
                             onChange={handleChange}
                             required
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <option value="USER">Client (Utilisateur)</option>
-                            <option value="MANAGER">Administrateur (Manager)</option>
-                            <option value="VISITOR">Visiteur</option>
-                        </select>
-                        {errors.role && <div className="form-error">{errors.role}</div>}
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Téléphone</label>
-                        <input
-                            type="tel"
-                            name="phoneNumber"
-                            className="form-input"
-                            value={formData.phoneNumber}
-                            onChange={handleChange}
-                            placeholder="+261 34 00 000 00"
+                            placeholder="••••••••"
                         />
                     </div>
 
-                    <button
-                        type="submit"
+                    <button 
+                        type="submit" 
                         className="btn btn-primary"
-                        style={{ width: '100%', marginTop: '1rem' }}
+                        style={{ width: '100%', marginTop: '16px' }}
                         disabled={loading}
                     >
-                        {loading ? 'Inscription...' : 'S\'inscrire'}
+                        {loading ? 'Inscription...' : 'S\'Inscrire'}
                     </button>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-secondary)' }}>
-                    Déjà un compte ?{' '}
-                    <Link to="/login" style={{ color: 'var(--primary-light)', textDecoration: 'none' }}>
-                        Se connecter
-                    </Link>
-                </p>
+                <div className="form-divider">
+                    <span>ou</span>
+                </div>
+
+                <Link 
+                    to="/login"
+                    className="btn btn-secondary"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                >
+                    Se Connecter
+                </Link>
+
+                <div className="form-footer">
+                    <p>
+                        <Link to="/visitor">Accéder en tant que visiteur</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

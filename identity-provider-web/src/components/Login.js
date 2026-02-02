@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/api';
+import '../styles/modern-design.css';
 
 function Login() {
     const navigate = useNavigate();
@@ -28,7 +29,13 @@ function Login() {
             if (response.data?.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
-                navigate('/dashboard');
+                
+                const user = response.data.user;
+                if (user.role === 'MANAGER') {
+                    navigate('/manager-dashboard');
+                } else {
+                    navigate('/user-dashboard');
+                }
             } else {
                 setError('Erreur: Token non reçu');
             }
@@ -40,14 +47,24 @@ function Login() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-            <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
-                <h2 className="card-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    Connexion
-                </h2>
+        <div className="flex-center" style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '16px' }}>
+            <div className="form-container">
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                    <div style={{
+                        fontSize: '32px',
+                        fontWeight: '700',
+                        color: '#10b981',
+                        letterSpacing: '-0.5px',
+                        fontFamily: 'Georgia, serif',
+                        marginBottom: '12px',
+                    }}>
+                        signal.eo
+                    </div>
+                    <p style={{ color: '#6b7280', fontSize: '14px', margin: 0 }}>Suivi des travaux routiers</p>
+                </div>
 
                 {error && (
-                    <div className="alert alert-error">
+                    <div className="alert alert-error" style={{ marginBottom: '16px' }}>
                         {error}
                     </div>
                 )}
@@ -79,22 +96,33 @@ function Login() {
                         />
                     </div>
 
-                    <button
-                        type="submit"
+                    <button 
+                        type="submit" 
                         className="btn btn-primary"
-                        style={{ width: '100%', marginTop: '1rem' }}
+                        style={{ width: '100%', marginTop: '16px' }}
                         disabled={loading}
                     >
-                        {loading ? 'Connexion...' : 'Se connecter'}
+                        {loading ? 'Connexion...' : 'Se Connecter'}
                     </button>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-secondary)' }}>
-                    Pas encore de compte ?{' '}
-                    <Link to="/register" style={{ color: 'var(--primary-light)', textDecoration: 'none' }}>
-                        S'inscrire
-                    </Link>
-                </p>
+                <div className="form-divider">
+                    <span>ou</span>
+                </div>
+
+                <Link 
+                    to="/register"
+                    className="btn btn-secondary"
+                    style={{ width: '100%', justifyContent: 'center' }}
+                >
+                    S'Inscrire
+                </Link>
+
+                <div className="form-footer">
+                    <p>
+                        <Link to="/visitor">Accéder en tant que visiteur</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
