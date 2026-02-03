@@ -233,39 +233,39 @@ Module Cartes
 
 ## ✅ PHASE 3: DÉMARRER LE SERVEUR DE CARTES (15-20 min)
 
-### Tâche 3.1: Démarrer le conteneur Tile Server
-- [ ] Lancer le serveur de cartes
+### Tâche 3.1: Démarrer les services avec Docker Compose
+- [ ] Lancer tous les services (PostgreSQL + Tile Server)
   ```bash
-  docker-compose up -d tile-server
+  docker-compose up -d
   ```
 
-- [ ] Vérifier que le conteneur est en cours d'exécution
+- [ ] Vérifier que les conteneurs sont en cours d'exécution
   ```bash
-  docker ps | grep tile-server
+  docker ps
   ```
-  - **Résultat attendu**: `tile-server    ...    Up X seconds`
+  - **Résultat attendu**: `postgres` et `tile-server` avec statut "Up"
 
-- [ ] Vérifier les logs
+- [ ] Vérifier les logs du tile-server
   ```bash
   docker logs tile-server
   ```
 
-### Tâche 3.2: Tester l'accès au serveur
+### Tâche 3.2: Tester l'accès au serveur de cartes
 - [ ] Accéder au serveur dans le navigateur
   ```
   URL: http://localhost:8081
   ```
-  - **Résultat attendu**: Page d'accueil de TileServer GL
+  - **Résultat attendu**: Page nginx pour le proxy de tuiles
 
-- [ ] Vérifier la liste des données disponibles
+- [ ] Tester l'accès aux tuiles OSM (via proxy nginx)
   ```
-  URL: http://localhost:8081/data
+  URL: http://localhost:8081/{z}/{x}/{y}.png
   ```
-  - **Résultat attendu**: Une liste JSON avec les fichiers MBTiles
+  - **Note**: Le tile-server actuel utilise nginx comme proxy vers OSM
 
-- [ ] Tester une tuile spécifique (zoom 0, x=0, y=0)
-  ```
-  URL: http://localhost:8081/data/madagascar/tiles/0/0/0.pbf
+- [ ] Vérifier la configuration nginx (optionnel)
+  ```bash
+  docker exec tile-server cat /etc/nginx/conf.d/default.conf
   ```
 
 ---
@@ -275,12 +275,12 @@ Module Cartes
 ### Tâche 4.1: Créer l'API de configuration des cartes
 - [ ] Créer le contrôleur `MapController.java`
   ```bash
-  # Chemin: identity-provider-backend/src/main/java/com/identity/api/controller/MapController.java
+  # Chemin: identity-provider-backend/src/main/java/com/identityprovider/controller/MapController.java
   ```
 
 - [ ] Contenu du contrôleur:
   ```java
-  package com.identity.api.controller;
+  package com.identityprovider.controller;
   
   import org.springframework.http.ResponseEntity;
   import org.springframework.web.bind.annotation.*;
@@ -294,7 +294,7 @@ Module Cartes
       
       /**
        * GET /api/maps/config
-       * Retourne la configuration de la carte pour Antananarivo
+       * Retourne la configuration de la carte pour le Signal EO
        */
       @GetMapping("/config")
       public ResponseEntity<?> getMapConfig() {
@@ -311,9 +311,9 @@ Module Cartes
           config.put("minZoom", 10);
           config.put("maxZoom", 18);
           
-          // Serveur de tuiles
+          // Serveur de tuiles (proxy nginx)
           config.put("tileServerUrl", "http://localhost:8081");
-          config.put("tileSourceId", "madagascar");
+          config.put("tilePattern", "http://localhost:8081/{z}/{x}/{y}.png");
           
           // Configuration Leaflet
           Map<String, Object> leaflet = new HashMap<>();
@@ -333,10 +333,11 @@ Module Cartes
           Map<String, Object> status = new HashMap<>();
           
           try {
-              // Vérifier la connexion au serveur de tuiles
-              String tileServerUrl = "http://localhost:8081/data";
+              // Vérifier la connexion au serveur de tuiles (nginx proxy)
+              String tileServerUrl = "http://localhost:8081";
               status.put("online", true);
               status.put("url", tileServerUrl);
+              status.put("type", "nginx-proxy");
               status.put("timestamp", System.currentTimeMillis());
           } catch (Exception e) {
               status.put("online", false);
@@ -430,7 +431,7 @@ Module Cartes
           minZoom: 10,
           maxZoom: 18,
           tileServerUrl: 'http://localhost:8081',
-          tileSourceId: 'madagascar'
+          tilePattern: 'http://localhost:8081/{z}/{x}/{y}.png'
         };
       }
     },
@@ -498,7 +499,7 @@ Module Cartes
       return <div className="map-error">{error || 'Erreur de configuration'}</div>;
     }
 
-    const { center, defaultZoom, minZoom, maxZoom, tileServerUrl, tileSourceId } = mapConfig;
+    const { center, defaultZoom, minZoom, maxZoom, tileServerUrl, tilePattern } = mapConfig;
 
     return (
       <div className="map-container">
@@ -510,7 +511,7 @@ Module Cartes
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
-            url={`${tileServerUrl}/data/${tileSourceId}/tiles/{z}/{x}/{y}.png`}
+            url={tilePattern || `${tileServerUrl}/{z}/{x}/{y}.png`}
             attribution='© OpenStreetMap contributors'
             maxZoom={maxZoom}
           />
@@ -518,7 +519,7 @@ Module Cartes
           {/* Exemple de marqueur */}
           <Marker position={[center.latitude, center.longitude]}>
             <Popup>
-              Antananarivo<br />
+              Signal EO - Centre Antananarivo<br />
               Latitude: {center.latitude}<br />
               Longitude: {center.longitude}
             </Popup>
@@ -649,20 +650,20 @@ Module Cartes
   - [ ] Déplacer la carte dans les 4 directions
   - [ ] Vérifier que les tuiles se chargent correctement
 
-### Tâche 6.3: Test du serveur de tuiles
-- [ ] Accéder à l'interface du serveur
+### Tâche 6.3: Test du serveur de tuiles (nginx proxy)
+- [ ] Accéder au serveur nginx
   ```
   http://localhost:8081
   ```
 
-- [ ] Vérifier la liste des données
+- [ ] Tester une tuile directement
   ```
-  http://localhost:8081/data
+  http://localhost:8081/14/8415/5450.png
   ```
 
-- [ ] Télécharger une tuile de test
+- [ ] Vérifier les logs nginx
   ```bash
-  curl -o test_tile.pbf http://localhost:8081/data/madagascar/tiles/13/2048/1234.pbf
+  docker logs tile-server
   ```
 
 ### Tâche 6.4: Tests d'intégration
@@ -707,8 +708,8 @@ Module Cartes
 
 - [ ] **Docker**: PostgreSQL et Tile Server en cours d'exécution
 - [ ] **Données**: Fichier MBTiles présent dans `tile-server/data/`
-- [ ] **Backend**: Serveur de cartes API démarré sur le port 8080
-- [ ] **Serveur de tuiles**: TileServer GL accessible sur http://localhost:8081
+- [ ] **Backend**: API Spring Boot démarrée sur le port 8080 (Signal EO)
+- [ ] **Serveur de tuiles**: Proxy nginx accessible sur http://localhost:8081
 - [ ] **Frontend**: React avec MapComponent fonctionnelle sur http://localhost:3000
 - [ ] **Tests**: Tous les tests de connectivité réussis
 - [ ] **Documentation**: Mise à jour complète
