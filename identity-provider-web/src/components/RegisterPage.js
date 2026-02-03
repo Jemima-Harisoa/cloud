@@ -10,6 +10,7 @@ function Register() {
     firstName: '',
     lastName: '',
     phoneNumber: '',
+    role: 'USER',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,9 +39,10 @@ function Register() {
         formData.password,
         formData.firstName,
         formData.lastName,
-        formData.phoneNumber
+        formData.phoneNumber,
+        formData.role
       );
-      
+
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || err.response?.data?.message || 'Erreur lors de l\'inscription');
@@ -54,9 +56,9 @@ function Register() {
       <div className="auth-card">
         <h1>Inscription</h1>
         <p className="subtitle">Créer un compte pour signaler les travaux routiers</p>
-        
+
         {error && <div className="error-message">{error}</div>}
-        
+
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-row">
             <div className="form-group">
@@ -106,6 +108,21 @@ function Register() {
               onChange={handleChange}
               placeholder="+261 XX XXX XXX"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="role">Rôle</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              required
+            >
+              <option value="USER">Client (Utilisateur)</option>
+              <option value="MANAGER">Administrateur (Manager)</option>
+              <option value="VISITOR">Visiteur</option>
+            </select>
           </div>
 
           <div className="form-group">

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import Header from './Header';
+import '../styles/modern-design.css';
 
 function Profile() {
     const navigate = useNavigate();
@@ -27,7 +29,7 @@ function Profile() {
                 return;
             }
 
-            const response = await authService.getUser(storedUser.userId);
+            const response = await authService.getUser(storedUser.id);
             setUser(response.data);
             setFormData({
                 firstName: response.data.firstName || '',
@@ -55,7 +57,7 @@ function Profile() {
 
         try {
             const storedUser = JSON.parse(localStorage.getItem('user'));
-            await authService.updateUser(storedUser.userId, formData);
+            await authService.updateUser(storedUser.id, formData);
             setSuccess('Profil mis à jour avec succès');
             setEditing(false);
             loadUserData();
@@ -65,16 +67,18 @@ function Profile() {
     };
 
     if (loading) {
-        return <div className="spinner"></div>;
+        return <div>Chargement...</div>;
     }
 
     return (
-        <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-            <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-                <h2 className="card-title">Mon Profil</h2>
+        <>
+            <Header user={user} showLogout={true} />
+            <div style={{ maxWidth: '600px', margin: '0 auto', padding: '32px 16px' }}>
+                <div style={{ background: '#ffffff', padding: '32px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px', color: '#1f2937' }}>Mon Profil</h2>
 
-                {success && <div className="alert alert-success">{success}</div>}
-                {error && <div className="alert alert-error">{error}</div>}
+                    {success && <div className="alert alert-success" style={{ marginBottom: '16px' }}>{success}</div>}
+                    {error && <div className="alert alert-error" style={{ marginBottom: '16px' }}>{error}</div>}
 
                 {!editing ? (
                     <div>
@@ -151,22 +155,24 @@ function Profile() {
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <button type="submit" className="btn btn-primary">
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                                 Enregistrer
                             </button>
                             <button
                                 type="button"
                                 className="btn btn-secondary"
                                 onClick={() => setEditing(false)}
+                                style={{ flex: 1 }}
                             >
                                 Annuler
                             </button>
                         </div>
                     </form>
                 )}
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 
