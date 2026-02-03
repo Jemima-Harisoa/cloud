@@ -4,18 +4,13 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
-
-import lombok.Builder;
-
 
 @Entity
 @Table(name = "sessions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Session {
     
     @Id
@@ -36,7 +31,6 @@ public class Session {
     private LocalDateTime expiresAt;
     
     @Column(name = "is_active")
-    @Builder.Default
     private Boolean isActive = true;
     
     @Column(name = "ip_address")

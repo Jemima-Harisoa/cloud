@@ -1,19 +1,10 @@
 package com.identityprovider.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "road_issues")
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class RoadIssue {
 
     @Id
@@ -31,7 +22,6 @@ public class RoadIssue {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private IssueStatus status = IssueStatus.NOUVEAU;
 
     @Column(name = "surface_m2")
@@ -59,7 +49,6 @@ public class RoadIssue {
     private String firebaseId;
 
     @Column(name = "synced_to_firebase")
-    @Builder.Default
     private Boolean syncedToFirebase = false;
 
     public enum IssueStatus {
