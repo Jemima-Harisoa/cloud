@@ -1,13 +1,29 @@
+# ========================================
+# CONFIGURATION GLOBALE
+# ========================================
 server:
-  port: 8080
+  port: 8081
+  error:
+    include-stacktrace: always
+    include-message: always
+    include-exception: true
+    include-binding-errors: always
+
+# ========================================
+# CONFIGURATION CORS (Chargée par SecurityConfig)
+# ========================================
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:4200,http://localhost:8100}
+  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,PATCH}
+  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+  max-age: ${CORS_MAX_AGE:3600}
 
 spring:
   application:
     name: identity-provider-backend
   
-  profiles:
-    active: ${ACTIVE_PROFILE:local}
-  
+  # Configuration JPA commune
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,95 +31,204 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-
-# Configuration CORS
-cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:4200,http://localhost:8100,http://localhost,capacitor://localhost}
-  allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS,PATCH}
-  allowed-headers: ${CORS_ALLOWED_HEADERS:*}
-  allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
-  max-age: ${CORS_MAX_AGE:3600}
-
-# Configuration H2 en mémoire (par défaut)
----
-spring:
-  config:
-    activate:
-      on-profile: h2
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   
-  datasource:
-    url: jdbc:h2:mem:identityprovider;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+  # Configuration de filtrage
+  security:
+    filter:
+      order: 10
 
-# Configuration PostgreSQL local
----
-spring:
-  config:
-    activate:
-      on-profile: local
-  
-  datasource:
-    url: jdbc:postgresql://localhost:5432/identity_provider
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
-  
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+# ========================================
+# LOGGING
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.identityprovider: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# ========================================
+# CONFIGURATION APPLICATION
+# ========================================
 app:
-  database:
-    type: postgres
-  
   security:
     jwt:
       secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
       expiration: 86400000 # 24 heures en millisecondes
-  
+    csrf:
+      enabled: false # Désactiver pour développement
   auth:
     max-login-attempts: ${MAX_LOGIN_ATTEMPTS:3}
     session-duration: ${SESSION_DURATION:86400} # 24 heures en secondes
-
-# Configuration Firebase (online)
----
-spring:
-  config:
-    activate:
-      on-profile: firebase
-
-app:
   database:
-    type: firebase
-  
-  firebase:
-    credentials-path: ${FIREBASE_CREDENTIALS_PATH:firebase-credentials.json}
-    database-url: ${FIREBASE_DATABASE_URL:https://your-project.firebaseio.com}
-  
-  security:
-    jwt:
-      secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation123456789}
-      expiration: 86400000
-  
-  auth:
-    max-login-attempts: ${MAX_LOGIN_ATTEMPTS:3}
-    session-duration: ${SESSION_DURATION:86400}
+    type: ${DATABASE_TYPE:h2}
 
-# Configuration Swagger
+# ========================================
+# SWAGGER / OPENAPI
+# ========================================
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
     operations-sorter: method
     tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+  show-actuator: true
+
+# ========================================
+# PROFIL: DÉVELOPPEMENT H2 (DÉFAUT)
+# ========================================
+---
+spring:
+  config:
+    activate:
+      on-profile: dev,default
+
+  datasource:
+    url: jdbc:h2:mem:identityprovider;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS identity
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        default_schema: identity
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: false
+
+app:
+  database:
+    type: h2
+
+# ========================================
+# PROFIL: LOCAL (PostgreSQL)
+# ========================================
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/identity_provider?currentSchema=public
+    username: postgres
+    password: rakotomamonjy
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        temp:
+          use_jdbc_metadata_defaults: false
+    show-sql: true
+    open-in-view: false
+
+app:
+  database:
+    type: postgres
+
+# ========================================
+# PROFIL: TEST
+# ========================================
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+# ========================================
+# PROFIL: FIREBASE (PRODUCTION)
+# ========================================
+---
+spring:
+  config:
+    activate:
+      on-profile: firebase,prod
+
+  datasource:
+    # Configuration vide pour Firebase
+    url: 
+    username: 
+    password: 
+  
+  jpa:
+    enabled: false # Désactiver JPA pour Firebase
+
+app:
+  database:
+    type: firebase
+  firebase:
+    credentials-path: ${FIREBASE_CREDENTIALS_PATH:classpath:firebase-credentials.json}
+    database-url: ${FIREBASE_DATABASE_URL:https://your-project.firebaseio.com}
+  security:
+    csrf:
+      enabled: true # Activer CSRF en production
+
+# ========================================
+# ACTUATOR (MONITORING)
+# ========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+      base-path: /actuator
+    enabled-by-default: true
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  info:
+    env:
+      enabled: true

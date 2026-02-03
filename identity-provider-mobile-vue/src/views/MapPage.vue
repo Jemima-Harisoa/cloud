@@ -24,6 +24,38 @@
             </ion-segment-button>
           </ion-segment>
 
+          <!-- Dashboard Recap (Visible for all) -->
+          <div v-if="viewMode !== 'manager'" class="dashboard-recap ion-margin-top">
+            <ion-grid>
+              <ion-row>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Points</span>
+                    <span class="stat-value">{{ stats.totalIssues || 0 }}</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Surface</span>
+                    <span class="stat-value">{{ stats.totalSurfaceArea?.toFixed(1) || 0 }} m²</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Budget</span>
+                    <span class="stat-value">{{ (stats.totalBudget || 0).toLocaleString() }} Ar</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Avanc.</span>
+                    <span class="stat-value">{{ stats.completionPercentage?.toFixed(1) || 0 }}%</span>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </div>
+
           <div v-if="viewMode === 'all'" class="ion-margin-top">
             <ion-item>
               <ion-select v-model="filter" label="Filtrer par statut" label-placement="floating">
@@ -42,6 +74,12 @@
           </div>
 
           <div v-if="viewMode === 'manager'" class="ion-margin-top">
+             <div class="ion-padding-horizontal">
+               <ion-button expand="block" color="tertiary" @click="handleSync" :disabled="syncing">
+                 <ion-icon slot="start" :icon="syncOutline"></ion-icon>
+                 {{ syncing ? 'Synchronisation...' : 'Synchroniser avec Firebase' }}
+               </ion-button>
+             </div>
              <ion-list>
                <ion-list-header>
                  <ion-label>Utilisateurs Bloqués</ion-label>
@@ -92,9 +130,10 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, 
   IonSegment, IonSegmentButton, IonLabel, 
   IonButton, IonIcon, IonItem, IonSelect, IonSelectOption,
-  IonList, IonBadge, IonListHeader, toastController
+  IonList, IonBadge, IonListHeader, IonGrid, IonRow, IonCol,
+  toastController
 } from '@ionic/vue';
-import { logOutOutline } from 'ionicons/icons';
+import { logOutOutline, syncOutline } from 'ionicons/icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import roadIssueService from '@/services/roadIssueService';
@@ -106,6 +145,13 @@ const issues = ref<any[]>([]);
 const blockedUsers = ref<any[]>([]);
 const viewMode = ref('all');
 const filter = ref('all');
+const syncing = ref(false);
+const stats = ref<any>({
+  totalIssues: 0,
+  totalSurfaceArea: 0,
+  totalBudget: 0,
+  completionPercentage: 0
+});
 let map: L.Map | null = null;
 let markers: L.LayerGroup | null = null;
 
@@ -171,8 +217,40 @@ const loadIssues = async () => {
     }
     issues.value = data;
     updateMarkers();
+    fetchStats();
   } catch (e) {
     console.error(e);
+  }
+};
+
+const fetchStats = async () => {
+  try {
+    stats.value = await roadIssueService.getStatistics();
+  } catch (e) {
+    console.error('Error fetching stats:', e);
+  }
+};
+
+const handleSync = async () => {
+  syncing.value = true;
+  try {
+    await roadIssueService.syncWithFirebase();
+    const toast = await toastController.create({
+      message: 'Synchronisation réussie avec Firebase',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    loadIssues();
+  } catch (e) {
+    const toast = await toastController.create({
+      message: 'Erreur lors de la synchronisation',
+      duration: 3000,
+      color: 'danger'
+    });
+    await toast.present();
+  } finally {
+    syncing.value = false;
   }
 };
 

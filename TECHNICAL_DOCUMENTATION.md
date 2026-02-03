@@ -46,7 +46,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/identity_provider
     username: postgres
-    password: postgres
+    password: rakotomamonjy
 ```
 
 #### Profil Firebase

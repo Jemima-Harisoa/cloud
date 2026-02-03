@@ -68,7 +68,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(methods);
         
         // Headers
-        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders));
+        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
         
         // Credentials et MaxAge
         configuration.setAllowCredentials(allowCredentials);

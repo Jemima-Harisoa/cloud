@@ -27,6 +27,10 @@ const roadIssueService = {
     const response = await apiClient.get(`${ROAD_ISSUES_API}/stats`);
     return response.data;
   },
+  syncWithFirebase: async () => {
+    const response = await apiClient.post(`${ROAD_ISSUES_API}/sync`);
+    return response.data;
+  },
 };
 
 export default roadIssueService;

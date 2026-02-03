@@ -136,9 +136,13 @@ const getLocation = async () => {
     const coordinates = await Geolocation.getCurrentPosition();
     formData.latitude = coordinates.coords.latitude;
     formData.longitude = coordinates.coords.longitude;
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    error.value = "Impossible d'obtenir la localisation";
+    if (err.code === 1) { // 1 = PERMISSION_DENIED
+      error.value = "La géolocalisation est bloquée par votre navigateur. Veuillez l'autoriser dans les réglages du site (en haut à gauche de la barre d'adresse).";
+    } else {
+      error.value = "Impossible d'obtenir la localisation";
+    }
   }
 };
 
