@@ -2,16 +2,31 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
-import Dashboard from './components/Dashboard';
+import UserDashboard from './components/UserDashboard';
+import ManagerPage from './components/ManagerPage';
+import VisitorPage from './components/VisitorPage';
 import Profile from './components/Profile';
-import MapView from './components/MapView';
-import ManagerDashboard from './components/ManagerDashboard';
 import './index.css';
 
 // Composant pour protéger les routes
-function PrivateRoute({ children }) {
+function PrivateRoute({ children, requiredRole = null }) {
     const token = localStorage.getItem('token');
-    return token ? children : <Navigate to="/login" />;
+    const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+    
+    if (!token) {
+        return <Navigate to="/login" />;
+    }
+    
+    if (requiredRole && user && user.role !== requiredRole) {
+        // Rediriger vers la bonne page selon le rôle
+        if (user.role === 'MANAGER') {
+            return <Navigate to="/manager-dashboard" />;
+        } else {
+            return <Navigate to="/user-dashboard" />;
+        }
+    }
+    
+    return children;
 }
 
 function App() {
@@ -23,43 +38,46 @@ function App() {
             }}
         >
             <Routes>
+                {/* Routes publiques */}
+                <Route path="/visitor" element={<VisitorPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                
+                {/* Routes protégées - UTILISATEUR */}
                 <Route
-                    path="/dashboard"
+                    path="/user-dashboard"
                     element={
-                        <PrivateRoute>
-                            <Dashboard />
+                        <PrivateRoute requiredRole="USER">
+                            <UserDashboard />
                         </PrivateRoute>
                     }
                 />
+                
+                {/* Routes protégées - MANAGER */}
                 <Route
-                    path="/manager"
+                    path="/manager-dashboard"
                     element={
-                        <PrivateRoute>
-                            <ManagerDashboard />
+                        <PrivateRoute requiredRole="MANAGER">
+                            <ManagerPage />
                         </PrivateRoute>
                     }
                 />
+                
+                {/* Route Profil - pour tous les rôles authentifiés */}
                 <Route
                     path="/profile"
                     element={
                         <PrivateRoute>
-                            <Dashboard />
                             <Profile />
                         </PrivateRoute>
                     }
                 />
-                <Route
-                    path="/map"
-                    element={
-                        <PrivateRoute>
-                            <Dashboard />
-                            <MapView />
-                        </PrivateRoute>
-                    }
-                />
-                <Route path="/" element={<Navigate to="/dashboard" />} />
+                
+                {/* Redirection par défaut */}
+                <Route path="/" element={<Navigate to="/visitor" />} />
+                
+                {/* Page 404 */}
+                <Route path="*" element={<Navigate to="/visitor" />} />
             </Routes>
         </Router>
     );

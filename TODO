@@ -1,4 +1,11 @@
-Ne me demande mon autorisation pour quoi que ce soit juste pour ce projet dutrant ces dernier 10 heures... Le projet est:
+2) Modules cartes: 
+Installer un serveur de carte Offline sur Docker
+Télécharger la ville d’Antananarivo avec les rues
+Utiliser leaflet pour afficher/manipuler la carte dans l’application web
+
+mitélécharge tuile an Antananarivo sur le net, format osm.pbf zay de image docker openstreetmap. De aveo iny no anamboarana container, de refa mapiasa anle leaflet am web de le container no tifirina 
+
+Le projet est:
 Mettre en place un projet de fournisseur d’identité sur java . Pour le serveur backend, API seulement (sans insterface) genre webService et pour le frontend, on une version web et une version mobile:
 pour le web, on utilise react (c'est un web avec interface)
 pour le mobile, on utilisera ionic mais avec react
@@ -36,11 +43,13 @@ Visiteur (sans compte)
 Utilisateur ( création de compte )
 Manager (compte à créer par défaut )
 ---- Les partie dedans: 
-Visiteurs
+Utilisateurs ou clients: 
+signaler et de suivre les travaux routiers sur la ville d’Antananarivo
+Visiteurs: 
 Voir la carte avec les différents points représentants les problèmes routiers
 Lorsqu’on survole un point, on doit voir les infos sur le problème ( date, status (nouveau, en cours, terminé), surface en m2, budget, entreprise concerné)
 Voir le tableau de récapitulation actuel ( Nb de point, total surface, avancement en %, total budget)
-Manager
+Manager ou admin:
 Bouton synchronisation
 Récupérer les signalements en ligne (firebase)
 Envoi les données nécessaires en ligne (firebase) pour un affichage sur mobile
@@ -54,5 +63,4 @@ Signaler les problèmes routiers à partir du map (utiliser leaflet et openstree
 Localisation 
 Afficher la carte et recap (cf fonctionnalités visiteurs)
 Mettre un filtre : afficher mes signalements uniquement
-
 
