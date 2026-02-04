@@ -37,7 +37,7 @@
                 <ion-col size="6">
                   <div class="stat-card">
                     <span class="stat-label">Surface</span>
-                    <span class="stat-value">{{ stats.totalSurfaceArea?.toFixed(1) || 0 }} m²</span>
+                    <span class="stat-value">{{ stats.totalSurfaceM2?.toFixed(1) || 0 }} m²</span>
                   </div>
                 </ion-col>
                 <ion-col size="6">
@@ -109,7 +109,8 @@
           <ion-list>
             <ion-item v-for="issue in issues" :key="issue.id" lines="none" class="issue-item">
               <ion-label>
-                <h2>{{ issue.description }}</h2> <!-- Backend uses description as title usually -->
+                <h2>{{ issue.title || 'Sans titre' }}</h2>
+                <p v-if="issue.description">{{ issue.description }}</p>
                 <p>
                   <ion-badge :color="getStatusColor(issue.status)">{{ issue.status }}</ion-badge>
                 </p>
@@ -148,7 +149,7 @@ const filter = ref('all');
 const syncing = ref(false);
 const stats = ref<any>({
   totalIssues: 0,
-  totalSurfaceArea: 0,
+  totalSurfaceM2: 0,
   totalBudget: 0,
   completionPercentage: 0
 });
@@ -303,16 +304,91 @@ onMounted(() => {
 
 watch([viewMode, filter], () => {
   loadIssues();
+  if (viewMode.value === 'manager') {
+    loadBlockedUsers();
+  }
 });
 </script>
 
 <style scoped>
 .map-controls {
-  background: white;
-  border-bottom: 1px solid #ddd;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
+
+.dashboard-recap {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f4f9 100%);
+  border-radius: 10px;
+  padding: 12px 4px;
+  border: 1px solid #edf2f7;
+  transition: transform 0.2s;
+}
+
+.stat-card:active {
+  transform: scale(0.95);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 700;
+}
+
+.issues-list-mobile {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  margin-top: -20px;
+  position: relative;
+  z-index: 10;
+  min-height: 40vh;
+}
+
 .issue-item {
-  border-bottom: 1px solid #eee;
-  --padding-start: 0;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.issue-item h2 {
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 4px;
+}
+
+.issue-item p {
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

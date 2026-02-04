@@ -8,7 +8,9 @@ import com.identityprovider.entity.User;
 import com.identityprovider.exception.UserNotFoundException;
 import com.identityprovider.repository.RoadIssueRepository;
 import com.identityprovider.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,23 @@ public class RoadIssueService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @PostConstruct
+    public void migrateData() {
+        try {
+            // Drop legacy check constraint that prevents English status names
+            jdbcTemplate.execute("ALTER TABLE road_issues DROP CONSTRAINT IF EXISTS road_issues_status_check");
+            
+            jdbcTemplate.execute("UPDATE road_issues SET status = 'NEW' WHERE status IN ('NOUVEAU', 'Nouveau', 'nouveau')");
+            jdbcTemplate.execute("UPDATE road_issues SET status = 'IN_PROGRESS' WHERE status IN ('EN_COURS', 'En cours', 'en cours')");
+            jdbcTemplate.execute("UPDATE road_issues SET status = 'COMPLETED' WHERE status IN ('TERMINE', 'Terminé', 'terminé', 'Termine')");
+        } catch (Exception e) {
+            System.err.println("Migration skipped: " + e.getMessage());
+        }
+    }
 
     @Transactional(readOnly = true)
     public List<RoadIssueResponse> getAllIssues() {
@@ -42,7 +61,7 @@ public class RoadIssueService {
 
     @Transactional(readOnly = true)
     public List<RoadIssueResponse> getIssuesByStatus(RoadIssue.IssueStatus status) {
-        return roadIssueRepository.findByStatus(status).stream()
+        return roadIssueRepository.findByStatus(status.name()).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
@@ -56,14 +75,21 @@ public class RoadIssueService {
 
     @Transactional
     public RoadIssueResponse createIssue(RoadIssueRequest request, Long reporterId) {
+        System.out.println("Creating issue for reporterId: " + reporterId);
+        System.out.println("Request Title: " + request.getTitle());
+        
         User reporter = userRepository.findById(reporterId)
-                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
+                .orElseThrow(() -> {
+                    System.err.println("User NOT FOUND: " + reporterId);
+                    return new UserNotFoundException("Utilisateur non trouvé");
+                });
 
         RoadIssue issue = new RoadIssue();
         issue.setLatitude(request.getLatitude());
         issue.setLongitude(request.getLongitude());
+        issue.setTitle(request.getTitle());
         issue.setDescription(request.getDescription());
-        issue.setStatus(request.getStatus() != null ? request.getStatus() : RoadIssue.IssueStatus.NOUVEAU);
+        issue.setStatus(request.getStatus() != null ? request.getStatus() : RoadIssue.IssueStatus.NEW);
         issue.setSurfaceM2(request.getSurfaceM2());
         issue.setBudget(request.getBudget());
         issue.setCompanyName(request.getCompanyName());
@@ -83,6 +109,8 @@ public class RoadIssueService {
             issue.setLatitude(request.getLatitude());
         if (request.getLongitude() != null)
             issue.setLongitude(request.getLongitude());
+        if (request.getTitle() != null)
+            issue.setTitle(request.getTitle());
         if (request.getDescription() != null)
             issue.setDescription(request.getDescription());
         if (request.getStatus() != null)
@@ -141,6 +169,7 @@ public class RoadIssueService {
         response.setId(issue.getId());
         response.setLatitude(issue.getLatitude());
         response.setLongitude(issue.getLongitude());
+        response.setTitle(issue.getTitle());
         response.setDescription(issue.getDescription());
         response.setStatus(issue.getStatus());
         response.setSurfaceM2(issue.getSurfaceM2());

@@ -5,6 +5,7 @@ import com.identityprovider.entity.RoadIssue;
 public class RoadIssueRequest {
     private Double latitude;
     private Double longitude;
+    private String title;
     private String description;
     private RoadIssue.IssueStatus status;
     private Double surfaceM2;
@@ -19,6 +20,14 @@ public class RoadIssueRequest {
 
     public void setLatitude(Double latitude) {
         this.latitude = latitude;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public Double getLongitude() {

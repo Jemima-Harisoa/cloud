@@ -41,7 +41,7 @@
           label-placement="floating"
           fill="outline"
           type="number"
-          v-model="formData.surfaceArea"
+          v-model="formData.surfaceM2"
         ></ion-input>
 
         <div class="ion-margin-top">
@@ -59,7 +59,7 @@
             label="Entreprise"
             label-placement="floating"
             fill="outline"
-            v-model="formData.company"
+            v-model="formData.companyName"
           ></ion-input>
         </div>
 
@@ -121,9 +121,9 @@ const formData = reactive({
   description: '',
   latitude: 0,
   longitude: 0,
-  surfaceArea: 0,
+  surfaceM2: 0,
   budget: 0,
-  company: '',
+  companyName: '',
   priority: 'MEDIUM'
 });
 

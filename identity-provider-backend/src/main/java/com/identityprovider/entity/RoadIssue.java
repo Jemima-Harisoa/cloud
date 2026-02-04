@@ -17,12 +17,14 @@ public class RoadIssue {
     @Column(nullable = false)
     private Double longitude;
 
+    @Column(length = 255)
+    private String title;
+
     @Column(length = 1000)
     private String description;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private IssueStatus status = IssueStatus.NOUVEAU;
+    private String status = IssueStatus.NEW.name();
 
     @Column(name = "surface_m2")
     private Double surfaceM2;
@@ -52,9 +54,9 @@ public class RoadIssue {
     private Boolean syncedToFirebase = false;
 
     public enum IssueStatus {
-        NOUVEAU,
-        EN_COURS,
-        TERMINE
+        NEW,
+        IN_PROGRESS,
+        COMPLETED
     }
 
     @PrePersist
@@ -75,6 +77,14 @@ public class RoadIssue {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public Double getLatitude() {
@@ -102,11 +112,20 @@ public class RoadIssue {
     }
 
     public IssueStatus getStatus() {
-        return status;
+        if (status == null) return IssueStatus.NEW;
+        try {
+            return IssueStatus.valueOf(status);
+        } catch (Exception e) {
+            // Conversion fallback for legacy data
+            if ("NOUVEAU".equalsIgnoreCase(status)) return IssueStatus.NEW;
+            if ("EN_COURS".equalsIgnoreCase(status)) return IssueStatus.IN_PROGRESS;
+            if ("TERMINE".equalsIgnoreCase(status)) return IssueStatus.COMPLETED;
+            return IssueStatus.NEW;
+        }
     }
 
     public void setStatus(IssueStatus status) {
-        this.status = status;
+        this.status = status != null ? status.name() : IssueStatus.NEW.name();
     }
 
     public Double getSurfaceM2() {

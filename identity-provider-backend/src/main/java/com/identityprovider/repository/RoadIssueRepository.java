@@ -13,7 +13,7 @@ public interface RoadIssueRepository extends JpaRepository<RoadIssue, Long> {
 
     List<RoadIssue> findByReporter(User reporter);
 
-    List<RoadIssue> findByStatus(RoadIssue.IssueStatus status);
+    List<RoadIssue> findByStatus(String status);
 
     List<RoadIssue> findBySyncedToFirebase(Boolean synced);
 
@@ -26,6 +26,6 @@ public interface RoadIssueRepository extends JpaRepository<RoadIssue, Long> {
     @Query("SELECT COALESCE(SUM(i.budget), 0) FROM RoadIssue i")
     Double sumTotalBudget();
 
-    @Query("SELECT COUNT(i) FROM RoadIssue i WHERE i.status = 'TERMINE'")
+    @Query("SELECT COUNT(i) FROM RoadIssue i WHERE i.status = 'COMPLETED'")
     Long countCompletedIssues();
 }

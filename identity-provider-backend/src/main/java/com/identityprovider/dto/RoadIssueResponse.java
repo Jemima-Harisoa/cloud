@@ -7,6 +7,7 @@ public class RoadIssueResponse {
     private Long id;
     private Double latitude;
     private Double longitude;
+    private String title;
     private String description;
     private RoadIssue.IssueStatus status;
     private Double surfaceM2;
@@ -43,6 +44,14 @@ public class RoadIssueResponse {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getDescription() {
