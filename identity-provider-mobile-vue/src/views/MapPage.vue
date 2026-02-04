@@ -124,10 +124,10 @@
           <h3>{{ viewMode === 'mine' ? 'Mes signalements' : 'Signalements' }} ({{ issues.length }})</h3>
           <ion-list>
             <ion-item v-for="issue in issues" :key="issue.id" lines="none" class="issue-item">
-              <ion-label>
+              <ion-label @click="focusOnIssue(issue)" class="clickable-label">
                 <h2>{{ issue.title || 'Sans titre' }}</h2>
                 <p v-if="issue.description">{{ issue.description }}</p>
-                <div class="status-row">
+                <div class="status-row" @click.stop>
                   <ion-badge :color="getStatusColor(issue.status)">{{ issue.status }}</ion-badge>
                   
                   <!-- Statut Editor for Manager or Owner -->
@@ -231,7 +231,8 @@ import {
   IonSegment, IonSegmentButton, IonLabel, 
   IonButton, IonIcon, IonItem, IonSelect, IonSelectOption,
   IonList, IonBadge, IonListHeader, IonGrid, IonRow, IonCol,
-  toastController, alertController, IonButtons, IonModal, IonTextarea, IonInput
+  toastController, alertController, IonButtons, IonModal, IonTextarea, IonInput,
+  onIonViewDidEnter
 } from '@ionic/vue';
 import { logOutOutline, logInOutline, syncOutline, trashOutline, createOutline, checkmarkOutline } from 'ionicons/icons';
 import L from 'leaflet';
@@ -256,6 +257,7 @@ const stats = ref<any>({
   totalBudget: 0,
   completionPercentage: 0
 });
+const markerMap = new Map<number, L.Marker>();
 let map: L.Map | null = null;
 let markers: L.LayerGroup | null = null;
 
@@ -395,10 +397,11 @@ const updateMarkers = () => {
   if (markers) map.removeLayer(markers);
 
   markers = L.layerGroup().addTo(map);
+  markerMap.clear();
 
   issues.value.forEach(issue => {
     if (issue.latitude != null && issue.longitude != null) {
-      L.marker([issue.latitude, issue.longitude], {
+      const marker = L.marker([issue.latitude, issue.longitude], {
         icon: getMarkerIcon(issue.status)
       })
       .bindPopup(`
@@ -412,8 +415,10 @@ const updateMarkers = () => {
           </div>
           <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${issue.description || ''}</p>
         </div>
-      `)
-      .addTo(markers!);
+      `);
+      
+      marker.addTo(markers!);
+      markerMap.set(issue.id, marker);
     }
   });
 };
@@ -425,6 +430,23 @@ const handleLogout = () => {
 
 const goToReport = () => {
     router.push('/report-issue');
+};
+
+const focusOnIssue = (issue: any) => {
+  if (issue.latitude != null && issue.longitude != null && map) {
+    map.setView([issue.latitude, issue.longitude], 16);
+    const marker = markerMap.get(issue.id);
+    if (marker) {
+      setTimeout(() => {
+        marker.openPopup();
+      }, 300);
+    }
+    // Scroll map into view on mobile
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+      mapElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
 };
 
 const getStatusColor = (status: string) => {
@@ -528,6 +550,10 @@ onMounted(() => {
   loadIssues();
 });
 
+onIonViewDidEnter(() => {
+  loadIssues();
+});
+
 watch([viewMode, filter], () => {
   loadIssues();
   if (viewMode.value === 'manager') {
@@ -605,6 +631,14 @@ watch([viewMode, filter], () => {
   font-weight: 700;
   color: #1a202c;
   margin-bottom: 4px;
+}
+
+.clickable-label {
+  cursor: pointer;
+}
+
+.clickable-label:active {
+  background-color: rgba(0,0,0,0.05);
 }
 
 .issue-item p {
