@@ -76,11 +76,17 @@ public class AuthService {
         // Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             int currentAttempts = handleFailedLogin(user);
-            int remaining = maxLoginAttempts - currentAttempts;
             
             String message = "Email ou mot de passe incorrect";
-            if (remaining > 0) {
-                message += " (Tentative " + currentAttempts + "/" + maxLoginAttempts + ")";
+            if (currentAttempts <= maxLoginAttempts) {
+                // Show warning on the LAST allowed attempt (e.g., attempt 3 out of 3)
+                if (currentAttempts == maxLoginAttempts) {
+                    message += " (Tentative " + currentAttempts + "/" + maxLoginAttempts + " : C'est la dernière tentative avant blocage !)";
+                } else {
+                    message += " (Tentative " + currentAttempts + "/" + maxLoginAttempts + ")";
+                }
+            } else {
+                message = "Compte bloqué après " + maxLoginAttempts + " tentatives infructueuses.";
             }
             throw new AuthenticationException(message);
         }
