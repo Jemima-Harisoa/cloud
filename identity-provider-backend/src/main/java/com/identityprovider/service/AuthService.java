@@ -60,7 +60,7 @@ public class AuthService {
         return new AuthResponse(token, mapToUserResponse(user));
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthenticationException.class)
     public AuthResponse login(LoginRequest request) {
         // Trouver l'utilisateur
         User user = userRepository.findByEmail(request.getEmail())
@@ -73,8 +73,14 @@ public class AuthService {
 
         // Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            handleFailedLogin(user);
-            throw new AuthenticationException("Email ou mot de passe incorrect");
+            int currentAttempts = handleFailedLogin(user);
+            int remaining = maxLoginAttempts - currentAttempts;
+            
+            String message = "Email ou mot de passe incorrect";
+            if (remaining > 0) {
+                message += " (Tentative " + currentAttempts + "/" + maxLoginAttempts + ")";
+            }
+            throw new AuthenticationException(message);
         }
 
         // Réinitialiser les tentatives échouées
@@ -143,15 +149,19 @@ public class AuthService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    private void handleFailedLogin(User user) {
+    private int handleFailedLogin(User user) {
         int attempts = user.getFailedLoginAttempts() + 1;
         user.setFailedLoginAttempts(attempts);
+        System.out.println("Échec de connexion pour " + user.getEmail() + " : " + attempts + "/" + maxLoginAttempts);
 
         if (attempts >= maxLoginAttempts) {
             user.setIsBlocked(true);
+            System.out.println("UTILISATEUR BLOQUÉ : " + user.getEmail());
         }
 
         userRepository.save(user);
+        userRepository.flush(); // Force l'écriture immédiate avant l'exception
+        return attempts;
     }
 
     private void createSession(User user, String token) {

@@ -91,7 +91,7 @@ const handleRegister = async () => {
     });
     await toast.present();
     
-    router.replace('/map');
+    window.location.href = '/map';
   } catch (err: any) {
     console.error(err);
     error.value = err.response?.data?.message || "Erreur lors de l'inscription";

@@ -3,8 +3,9 @@
     <ion-header>
       <ion-toolbar color="primary">
         <ion-title>Carte - Travaux Routiers</ion-title>
-        <ion-button slot="end" fill="clear" @click="handleLogout">
-          <ion-icon :icon="logOutOutline"></ion-icon>
+        <ion-button slot="end" fill="clear" @click="handleLogout" color="light">
+          <ion-icon slot="start" :icon="currentUser ? logOutOutline : logInOutline"></ion-icon>
+          <ion-label>{{ currentUser ? 'Déconnexion' : 'Connexion' }}</ion-label>
         </ion-button>
       </ion-toolbar>
     </ion-header>
@@ -16,7 +17,7 @@
             <ion-segment-button value="all">
               <ion-label>Tous</ion-label>
             </ion-segment-button>
-            <ion-segment-button value="mine">
+            <ion-segment-button v-if="currentUser" value="mine">
               <ion-label>Mes signalements</ion-label>
             </ion-segment-button>
             <ion-segment-button v-if="currentUser?.role === 'MANAGER'" value="manager">
@@ -97,6 +98,13 @@
                  </ion-button>
                </ion-item>
              </ion-list>
+
+             <div class="ion-padding">
+               <ion-button expand="block" color="danger" fill="outline" @click="handleLogout">
+                 <ion-icon slot="start" :icon="logOutOutline"></ion-icon>
+                 Déconnexion
+               </ion-button>
+             </div>
           </div>
         </div>
 
@@ -111,10 +119,25 @@
               <ion-label>
                 <h2>{{ issue.title || 'Sans titre' }}</h2>
                 <p v-if="issue.description">{{ issue.description }}</p>
-                <p>
+                <div class="status-row">
                   <ion-badge :color="getStatusColor(issue.status)">{{ issue.status }}</ion-badge>
-                </p>
+                  
+                  <!-- Statut Editor for Manager -->
+                  <ion-select 
+                    v-if="currentUser?.role === 'MANAGER'" 
+                    :value="issue.status" 
+                    aria-label="Changer le statut"
+                    interface="popover"
+                    class="status-select"
+                    @ionChange="(e) => handleStatusUpdate(issue.id, e.detail.value)"
+                  >
+                    <ion-select-option value="NEW">NEW</ion-select-option>
+                    <ion-select-option value="IN_PROGRESS">IN PROGRESS</ion-select-option>
+                    <ion-select-option value="COMPLETED">COMPLETED</ion-select-option>
+                  </ion-select>
+                </div>
                 <p v-if="issue.surfaceM2">Surface: {{ issue.surfaceM2 }} m²</p>
+                <p v-if="issue.companyName" style="font-size: 0.8rem; color: #718096;">🏢 {{ issue.companyName }}</p>
               </ion-label>
             </ion-item>
           </ion-list>
@@ -134,7 +157,7 @@ import {
   IonList, IonBadge, IonListHeader, IonGrid, IonRow, IonCol,
   toastController
 } from '@ionic/vue';
-import { logOutOutline, syncOutline } from 'ionicons/icons';
+import { logOutOutline, logInOutline, syncOutline } from 'ionicons/icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import roadIssueService from '@/services/roadIssueService';
@@ -217,7 +240,9 @@ const loadIssues = async () => {
        data = await roadIssueService.getAllIssues();
     }
     issues.value = data;
-    updateMarkers();
+    setTimeout(() => {
+      updateMarkers();
+    }, 100);
     fetchStats();
   } catch (e) {
     console.error(e);
@@ -262,13 +287,21 @@ const updateMarkers = () => {
   markers = L.layerGroup().addTo(map);
 
   issues.value.forEach(issue => {
-    if (issue.latitude && issue.longitude) {
+    if (issue.latitude != null && issue.longitude != null) {
       L.marker([issue.latitude, issue.longitude], {
         icon: getMarkerIcon(issue.status)
       })
       .bindPopup(`
-        <b>${issue.status}</b><br>
-        ${issue.description}
+        <div style="padding: 5px; min-width: 150px;">
+          <b style="font-size: 1.1rem; color: #1a202c;">${issue.title || 'Sans titre'}</b><br>
+          <span style="color: #718096; font-size: 0.8rem;">Statut: ${issue.status}</span><br>
+          <div style="margin: 5px 0; border-top: 1px solid #eee; padding-top: 5px;">
+             ${issue.surfaceM2 ? `<b>Surface:</b> ${issue.surfaceM2} m²<br>` : ''}
+             ${issue.budget ? `<b>Budget:</b> ${issue.budget.toLocaleString()} Ar<br>` : ''}
+             ${issue.companyName ? `<b>Entreprise:</b> ${issue.companyName}<br>` : ''}
+          </div>
+          <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${issue.description || ''}</p>
+        </div>
       `)
       .addTo(markers!);
     }
@@ -277,7 +310,7 @@ const updateMarkers = () => {
 
 const handleLogout = () => {
   authService.logout();
-  router.replace('/login');
+  window.location.href = '/login';
 };
 
 const goToReport = () => {
@@ -291,6 +324,22 @@ const getStatusColor = (status: string) => {
       case 'COMPLETED': return 'success';
       default: return 'medium';
     }
+};
+
+const handleStatusUpdate = async (id: number, newStatus: string) => {
+  try {
+    await roadIssueService.updateIssue(id, { status: newStatus });
+    const toast = await toastController.create({
+      message: 'Statut mis à jour',
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
+    await toast.present();
+    loadIssues();
+  } catch (e) {
+    console.error('Error updating status:', e);
+  }
 };
 
 onMounted(() => {
@@ -390,5 +439,22 @@ watch([viewMode, filter], () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.status-select {
+  --placeholder-color: var(--ion-color-primary);
+  --placeholder-opacity: 1;
+  font-size: 0.8rem;
+  max-width: 130px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 4px;
 }
 </style>

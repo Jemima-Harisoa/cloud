@@ -31,6 +31,10 @@ const roadIssueService = {
     const response = await apiClient.post(`${ROAD_ISSUES_API}/sync`);
     return response.data;
   },
+  updateIssue: async (id: number, issueData: any) => {
+    const response = await apiClient.put(`${ROAD_ISSUES_API}/${id}`, issueData);
+    return response.data;
+  }
 };
 
 export default roadIssueService;

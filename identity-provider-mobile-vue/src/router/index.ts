@@ -31,7 +31,7 @@ const router = createRouter({
 
 // Navigation Guard: Protect routes that require authentication
 router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/register']; // Login and register must be public
+  const publicPages = ['/login', '/register', '/map']; // Map is now also public for visitors
   const authRequired = !publicPages.includes(to.path);
   const loggedIn = localStorage.getItem('token');
 

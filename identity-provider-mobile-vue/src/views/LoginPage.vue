@@ -53,6 +53,14 @@
           >
             Créer un compte
           </ion-button>
+          <br>
+          <ion-button 
+            fill="clear" 
+            color="medium"
+            @click="continueAsVisitor"
+          >
+            Continuer en tant que visiteur
+          </ion-button>
         </div>
 
         <ion-loading :is-open="loading" message="Connexion en cours..."></ion-loading>
@@ -104,7 +112,8 @@ const handleLogin = async () => {
     });
     await toast.present();
 
-    router.replace('/map');
+    // Using window.location.href forces a full refresh and avoids state issues
+    window.location.href = '/map';
   } catch (err: any) {
     console.error('Login error:', err);
     error.value = err.response?.data?.message || 'Identifiants incorrects ou erreur serveur';
@@ -116,6 +125,13 @@ const handleLogin = async () => {
 const goToRegister = () => {
   router.push('/register');
 };
+
+const continueAsVisitor = () => {
+  localStorage.removeItem('token'); // Ensure no old tokens are present
+  localStorage.removeItem('user');
+  window.location.href = '/map';
+};
+
 </script>
 
 <style scoped>
