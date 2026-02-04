@@ -49,6 +49,15 @@ const authService = {
     const response = await apiClient.get(`${AUTH_API}/blocked-users`);
     return response.data;
   },
+
+  getAllUsers: async () => {
+    const response = await apiClient.get(`${AUTH_API}/users`); // I need to verify if this endpoint exists
+    return response.data;
+  },
+
+  deleteUser: async (userId: number) => {
+    return await apiClient.delete(`${AUTH_API}/user/${userId}`);
+  },
 };
 
 export default authService;

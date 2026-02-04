@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/road-issues")
-@CrossOrigin(origins = "*")
 @Tag(name = "Road Issues", description = "API de gestion des signalements de travaux routiers")
 public class RoadIssueController {
 
@@ -62,16 +61,41 @@ public class RoadIssueController {
     @Operation(summary = "Modifier un signalement")
     public ResponseEntity<RoadIssueResponse> updateIssue(
             @PathVariable Long id,
-            @RequestBody RoadIssueRequest request) {
-        RoadIssueResponse updatedIssue = roadIssueService.updateIssue(id, request);
+            @RequestBody RoadIssueRequest request,
+            @RequestParam Long requesterId,
+            @RequestParam String role) {
+        RoadIssueResponse updatedIssue = roadIssueService.updateIssue(id, request, requesterId, role);
         return ResponseEntity.ok(updatedIssue);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Supprimer un signalement")
-    public ResponseEntity<Void> deleteIssue(@PathVariable Long id) {
-        roadIssueService.deleteIssue(id);
+    public ResponseEntity<Void> deleteIssue(
+            @PathVariable Long id,
+            @RequestParam Long requesterId,
+            @RequestParam String role) {
+        roadIssueService.deleteIssue(id, requesterId, role);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/bulk")
+    @Operation(summary = "Supprimer plusieurs signalements")
+    public ResponseEntity<Void> deleteIssuesBulk(
+            @RequestBody List<Long> ids,
+            @RequestParam Long requesterId,
+            @RequestParam String role) {
+        roadIssueService.deleteIssuesBulk(ids, requesterId, role);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/bulk/status")
+    @Operation(summary = "Mettre à jour le statut de plusieurs signalements")
+    public ResponseEntity<Void> updateIssuesStatusBulk(
+            @RequestBody List<Long> ids,
+            @RequestParam RoadIssue.IssueStatus status,
+            @RequestParam String role) {
+        roadIssueService.updateIssuesStatusBulk(ids, status, role);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/stats")

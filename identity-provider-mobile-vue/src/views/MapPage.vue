@@ -83,19 +83,27 @@
              </div>
              <ion-list>
                <ion-list-header>
-                 <ion-label>Utilisateurs Bloqués</ion-label>
+                 <ion-label>Gestion des Utilisateurs</ion-label>
                </ion-list-header>
-               <ion-item v-if="blockedUsers.length === 0">
-                 <ion-label>Aucun utilisateur bloqué</ion-label>
+               <ion-item v-if="allUsers.length === 0">
+                 <ion-label>Aucun utilisateur trouvé</ion-label>
                </ion-item>
-               <ion-item v-for="user in blockedUsers" :key="user.id">
+               <ion-item v-for="user in allUsers" :key="user.id">
                  <ion-label>
                    <h2>{{ user.firstName }} {{ user.lastName }}</h2>
                    <p>{{ user.email }}</p>
+                   <ion-badge v-if="user.isBlocked" color="danger">Bloqué</ion-badge>
+                   <ion-badge v-else color="success">Actif</ion-badge>
+                   <ion-badge color="medium" class="ion-margin-start">{{ user.role }}</ion-badge>
                  </ion-label>
-                 <ion-button slot="end" color="success" @click="handleUnblock(user.id)">
-                   Débloquer
-                 </ion-button>
+                 <div slot="end" class="user-actions">
+                   <ion-button v-if="user.isBlocked" color="success" fill="clear" @click="handleUnblock(user.id)">
+                     <ion-icon slot="icon-only" :icon="logInOutline"></ion-icon>
+                   </ion-button>
+                   <ion-button v-if="user.email !== 'manager@example.com'" color="danger" fill="clear" @click="confirmDeleteUser(user.id)">
+                     <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
+                   </ion-button>
+                 </div>
                </ion-item>
              </ion-list>
 
@@ -122,9 +130,9 @@
                 <div class="status-row">
                   <ion-badge :color="getStatusColor(issue.status)">{{ issue.status }}</ion-badge>
                   
-                  <!-- Statut Editor for Manager -->
+                  <!-- Statut Editor for Manager or Owner -->
                   <ion-select 
-                    v-if="currentUser?.role === 'MANAGER'" 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id" 
                     :value="issue.status" 
                     aria-label="Changer le statut"
                     interface="popover"
@@ -135,13 +143,81 @@
                     <ion-select-option value="IN_PROGRESS">IN PROGRESS</ion-select-option>
                     <ion-select-option value="COMPLETED">COMPLETED</ion-select-option>
                   </ion-select>
+                  
+                  <!-- Edit Button (Pencil) for Manager or Owner -->
+                  <ion-button 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id"
+                    fill="clear" 
+                    color="primary" 
+                    class="edit-btn"
+                    @click="handleEdit(issue)"
+                  >
+                    <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
+                  </ion-button>
+
+                  <!-- Delete Button for Manager or Owner -->
+                  <ion-button 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id"
+                    fill="clear" 
+                    color="danger" 
+                    class="delete-btn"
+                    @click="handleDelete(issue.id)"
+                  >
+                    <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
+                  </ion-button>
                 </div>
                 <p v-if="issue.surfaceM2">Surface: {{ issue.surfaceM2 }} m²</p>
+                
                 <p v-if="issue.companyName" style="font-size: 0.8rem; color: #718096;">🏢 {{ issue.companyName }}</p>
               </ion-label>
             </ion-item>
           </ion-list>
         </div>
+
+        <!-- Edit Modal -->
+        <ion-modal :is-open="isEditModalOpen" @didDismiss="isEditModalOpen = false">
+          <ion-header>
+            <ion-toolbar color="primary">
+              <ion-title>Modifier le signalement</ion-title>
+              <ion-buttons slot="end">
+                <ion-button @click="isEditModalOpen = false">Fermer</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+            <div class="edit-form">
+              <ion-item>
+                <ion-input label="Titre" label-placement="floating" v-model="editData.title"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-textarea label="Description" label-placement="floating" v-model="editData.description" :rows="4"></ion-textarea>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Surface (m²)" label-placement="floating" type="number" v-model="editData.surfaceM2"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Budget (Ar)" label-placement="floating" type="number" v-model="editData.budget"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Entreprise" label-placement="floating" v-model="editData.companyName"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-select label="Statut" label-placement="floating" v-model="editData.status">
+                  <ion-select-option value="NEW">NEW</ion-select-option>
+                  <ion-select-option value="IN_PROGRESS">IN PROGRESS</ion-select-option>
+                  <ion-select-option value="COMPLETED">COMPLETED</ion-select-option>
+                </ion-select>
+              </ion-item>
+
+              <div class="ion-padding-top">
+                <ion-button expand="block" color="success" @click="saveEdit" :disabled="savingEdit">
+                  <ion-icon slot="start" :icon="checkmarkOutline"></ion-icon>
+                  {{ savingEdit ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+                </ion-button>
+              </div>
+            </div>
+          </ion-content>
+        </ion-modal>
       </div>
     </ion-content>
   </ion-page>
@@ -155,9 +231,9 @@ import {
   IonSegment, IonSegmentButton, IonLabel, 
   IonButton, IonIcon, IonItem, IonSelect, IonSelectOption,
   IonList, IonBadge, IonListHeader, IonGrid, IonRow, IonCol,
-  toastController
+  toastController, alertController, IonButtons, IonModal, IonTextarea, IonInput
 } from '@ionic/vue';
-import { logOutOutline, logInOutline, syncOutline } from 'ionicons/icons';
+import { logOutOutline, logInOutline, syncOutline, trashOutline, createOutline, checkmarkOutline } from 'ionicons/icons';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import roadIssueService from '@/services/roadIssueService';
@@ -166,10 +242,14 @@ import authService from '@/services/authService';
 const router = useRouter();
 const currentUser = authService.getCurrentUser();
 const issues = ref<any[]>([]);
-const blockedUsers = ref<any[]>([]);
+const blockedUsers = ref<any[]>([]); // Keeping for compatibility, but moving to allUsers
+const allUsers = ref<any[]>([]);
 const viewMode = ref('all');
 const filter = ref('all');
 const syncing = ref(false);
+const isEditModalOpen = ref(false);
+const savingEdit = ref(false);
+const editData = ref<any>({});
 const stats = ref<any>({
   totalIssues: 0,
   totalSurfaceM2: 0,
@@ -207,6 +287,7 @@ const loadBlockedUsers = async () => {
   if (currentUser?.role === 'MANAGER') {
     try {
       blockedUsers.value = await authService.getBlockedUsers();
+      allUsers.value = await authService.getAllUsers();
     } catch (e) {
       console.error(e);
     }
@@ -226,6 +307,35 @@ const handleUnblock = async (userId: number) => {
   } catch (e) {
     console.error(e);
   }
+};
+
+const confirmDeleteUser = async (userId: number) => {
+  const alert = await alertController.create({
+    header: 'Confirmer la suppression',
+    message: 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      {
+        text: 'Supprimer',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            await authService.deleteUser(userId);
+            const toast = await toastController.create({
+              message: 'Utilisateur supprimé',
+              duration: 2000,
+              color: 'success'
+            });
+            await toast.present();
+            loadBlockedUsers(); // Refresh the list
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
 };
 
 const loadIssues = async () => {
@@ -328,7 +438,7 @@ const getStatusColor = (status: string) => {
 
 const handleStatusUpdate = async (id: number, newStatus: string) => {
   try {
-    await roadIssueService.updateIssue(id, { status: newStatus });
+    await roadIssueService.updateIssue(id, { status: newStatus }, currentUser?.id, currentUser?.role);
     const toast = await toastController.create({
       message: 'Statut mis à jour',
       duration: 2000,
@@ -340,6 +450,73 @@ const handleStatusUpdate = async (id: number, newStatus: string) => {
   } catch (e) {
     console.error('Error updating status:', e);
   }
+};
+
+const handleEdit = (issue: any) => {
+  editData.value = { ...issue };
+  isEditModalOpen.value = true;
+};
+
+const saveEdit = async () => {
+  if (!editData.value.id) return;
+  
+  savingEdit.value = true;
+  try {
+    await roadIssueService.updateIssue(
+      editData.value.id, 
+      editData.value, 
+      currentUser?.id, 
+      currentUser?.role
+    );
+    
+    const toast = await toastController.create({
+      message: 'Signalement mis à jour avec succès',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    
+    isEditModalOpen.value = false;
+    loadIssues();
+  } catch (e) {
+    console.error('Error saving edit:', e);
+    const toast = await toastController.create({
+      message: 'Erreur lors de la mise à jour',
+      duration: 3000,
+      color: 'danger'
+    });
+    await toast.present();
+  } finally {
+    savingEdit.value = false;
+  }
+};
+
+const handleDelete = async (id: number) => {
+  const alert = await alertController.create({
+    header: 'Confirmer',
+    message: 'Voulez-vous vraiment supprimer ce signalement ?',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      { 
+        text: 'Supprimer', 
+        handler: async () => {
+          try {
+            await roadIssueService.deleteIssue(id, currentUser.id, currentUser.role);
+            const toast = await toastController.create({
+              message: 'Signalement supprimé',
+              duration: 2000,
+              color: 'success'
+            });
+            await toast.present();
+            loadIssues();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
 };
 
 onMounted(() => {

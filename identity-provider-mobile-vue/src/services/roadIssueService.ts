@@ -31,8 +31,29 @@ const roadIssueService = {
     const response = await apiClient.post(`${ROAD_ISSUES_API}/sync`);
     return response.data;
   },
-  updateIssue: async (id: number, issueData: any) => {
-    const response = await apiClient.put(`${ROAD_ISSUES_API}/${id}`, issueData);
+  updateIssue: async (id: number, issueData: any, requesterId?: number, role?: string) => {
+    const params = new URLSearchParams();
+    if (requesterId) params.append('requesterId', requesterId.toString());
+    if (role) params.append('role', role);
+
+    const response = await apiClient.put(`${ROAD_ISSUES_API}/${id}?${params.toString()}`, issueData);
+    return response.data;
+  },
+
+  deleteIssue: async (id: number, requesterId: number, role: string) => {
+    const response = await apiClient.delete(`${ROAD_ISSUES_API}/${id}?requesterId=${requesterId}&role=${role}`);
+    return response.data;
+  },
+
+  deleteIssuesBulk: async (ids: number[], requesterId: number, role: string) => {
+    const response = await apiClient.delete(`${ROAD_ISSUES_API}/bulk?requesterId=${requesterId}&role=${role}`, {
+      data: ids
+    });
+    return response.data;
+  },
+
+  updateIssuesStatusBulk: async (ids: number[], status: string, role: string) => {
+    const response = await apiClient.put(`${ROAD_ISSUES_API}/bulk/status?status=${status}&role=${role}`, ids);
     return response.data;
   }
 };

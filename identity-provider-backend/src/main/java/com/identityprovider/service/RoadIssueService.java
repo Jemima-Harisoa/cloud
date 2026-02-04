@@ -101,9 +101,17 @@ public class RoadIssueService {
     }
 
     @Transactional
-    public RoadIssueResponse updateIssue(Long id, RoadIssueRequest request) {
+    public RoadIssueResponse updateIssue(Long id, RoadIssueRequest request, Long requesterId, String role) {
         RoadIssue issue = roadIssueRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Signalement non trouvé"));
+
+        // Vérifier les permissions : Manager ou Propriétaire
+        boolean isManager = "MANAGER".equalsIgnoreCase(role);
+        boolean isOwner = issue.getReporter() != null && issue.getReporter().getId().equals(requesterId);
+
+        if (!isManager && !isOwner) {
+            throw new RuntimeException("Vous n'avez pas l'autorisation de modifier ce signalement");
+        }
 
         if (request.getLatitude() != null)
             issue.setLatitude(request.getLatitude());
@@ -129,11 +137,51 @@ public class RoadIssueService {
     }
 
     @Transactional
-    public void deleteIssue(Long id) {
-        if (!roadIssueRepository.existsById(id)) {
-            throw new RuntimeException("Signalement non trouvé");
+    public void deleteIssue(Long id, Long requesterId, String role) {
+        RoadIssue issue = roadIssueRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Signalement non trouvé"));
+
+        // Vérifier les permissions : Manager ou Propriétaire
+        boolean isManager = "MANAGER".equalsIgnoreCase(role);
+        boolean isOwner = issue.getReporter() != null && issue.getReporter().getId().equals(requesterId);
+
+        if (!isManager && !isOwner) {
+            throw new RuntimeException("Vous n'avez pas l'autorisation de supprimer ce signalement");
         }
+
         roadIssueRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteIssuesBulk(List<Long> ids, Long requesterId, String role) {
+        // Seul le manager peut faire des suppressions groupées pour l'instant (ou le proprio de tous les signalements selectionnés)
+        boolean isManager = "MANAGER".equalsIgnoreCase(role);
+        
+        for (Long id : ids) {
+            RoadIssue issue = roadIssueRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Signalement " + id + " non trouvé"));
+            
+            boolean isOwner = issue.getReporter() != null && issue.getReporter().getId().equals(requesterId);
+            
+            if (!isManager && !isOwner) {
+                throw new RuntimeException("Vous n'avez pas l'autorisation de supprimer le signalement " + id);
+            }
+            roadIssueRepository.deleteById(id);
+        }
+    }
+
+    @Transactional
+    public void updateIssuesStatusBulk(List<Long> ids, RoadIssue.IssueStatus status, String role) {
+        if (!"MANAGER".equalsIgnoreCase(role)) {
+            throw new RuntimeException("Seul le manager peut effectuer des mises à jour groupées");
+        }
+
+        for (Long id : ids) {
+            RoadIssue issue = roadIssueRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Signalement " + id + " non trouvé"));
+            issue.setStatus(status);
+            roadIssueRepository.save(issue);
+        }
     }
 
     @Transactional(readOnly = true)

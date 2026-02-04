@@ -20,4 +20,6 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     void deleteByExpiresAtBefore(LocalDateTime dateTime);
     
     void deleteByUserAndIsActiveTrue(User user);
+    
+    void deleteByUser(User user);
 }

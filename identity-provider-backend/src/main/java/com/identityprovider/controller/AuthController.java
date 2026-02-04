@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentification", description = "API d'authentification et de gestion des utilisateurs")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -69,5 +68,19 @@ public class AuthController {
     public ResponseEntity<java.util.List<UserResponse>> getBlockedUsers() {
         java.util.List<UserResponse> blockedUsers = authService.getBlockedUsers();
         return ResponseEntity.ok(blockedUsers);
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Récupérer tous les utilisateurs (Manager)")
+    public ResponseEntity<java.util.List<UserResponse>> getAllUsers() {
+        java.util.List<UserResponse> users = authService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @DeleteMapping("/user/{userId}")
+    @Operation(summary = "Supprimer un compte utilisateur")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        authService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 }

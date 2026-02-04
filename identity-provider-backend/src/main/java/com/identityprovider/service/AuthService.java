@@ -9,6 +9,7 @@ import com.identityprovider.exception.UserBlockedException;
 import com.identityprovider.exception.UserNotFoundException;
 import com.identityprovider.repository.SessionRepository;
 import com.identityprovider.repository.UserRepository;
+import com.identityprovider.repository.RoadIssueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,7 @@ public class AuthService {
     private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RoadIssueRepository roadIssueRepository;
 
     @Value("${app.auth.max-login-attempts}")
     private int maxLoginAttempts;
@@ -143,6 +145,31 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
+
+        // 1. Supprimer toutes les sessions de l'utilisateur
+        sessionRepository.deleteByUser(user);
+
+        // 2. Anonymiser les signalements (mettre reporter à NULL au lieu de les supprimer pour garder l'historique de la carte)
+        com.identityprovider.entity.RoadIssue.IssueStatus status; // dummy to ensure RoadIssue is available if needed, but we use injected repo
+        roadIssueRepository.findByReporter(user).forEach(issue -> {
+            issue.setReporter(null);
+            roadIssueRepository.save(issue);
+        });
+
+        // 3. Supprimer l'utilisateur
+        userRepository.delete(user);
+    }
+
+    public java.util.List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToUserResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public java.util.List<UserResponse> getBlockedUsers() {
         return userRepository.findByIsBlocked(true).stream()
                 .map(this::mapToUserResponse)
@@ -150,6 +177,13 @@ public class AuthService {
     }
 
     private int handleFailedLogin(User user) {
+        // Ne pas appliquer de limite si c'est le manager
+        if (user.getRole() == com.identityprovider.entity.UserRole.MANAGER || 
+            "manager@example.com".equals(user.getEmail())) {
+            System.out.println("Échec de connexion pour le Manager " + user.getEmail() + " : Pas de blocage appliqué.");
+            return 0;
+        }
+
         int attempts = user.getFailedLoginAttempts() + 1;
         user.setFailedLoginAttempts(attempts);
         System.out.println("Échec de connexion pour " + user.getEmail() + " : " + attempts + "/" + maxLoginAttempts);
