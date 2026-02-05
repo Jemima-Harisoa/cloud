@@ -26,6 +26,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RoadIssueRepository roadIssueRepository;
+    private final EmailService emailService;
 
     @Value("${app.auth.max-login-attempts}")
     private int maxLoginAttempts;
@@ -149,6 +150,9 @@ public class AuthService {
         user.setIsBlocked(false);
         user.setFailedLoginAttempts(0);
         userRepository.save(user);
+        
+        // Envoyer la notification par email
+        emailService.sendUnblockNotification(user.getEmail(), user.getFirstName());
     }
 
     @Transactional

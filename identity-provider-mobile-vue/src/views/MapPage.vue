@@ -98,7 +98,7 @@
                  </ion-label>
                  <div slot="end" class="user-actions">
                    <ion-button v-if="user.isBlocked" color="success" fill="clear" @click="handleUnblock(user.id)">
-                     <ion-icon slot="icon-only" :icon="logInOutline"></ion-icon>
+                     <ion-icon slot="icon-only" :icon="logInOutline"></ion-icon>Débloquer
                    </ion-button>
                    <ion-button v-if="user.email !== 'manager@example.com'" color="danger" fill="clear" @click="confirmDeleteUser(user.id)">
                      <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>

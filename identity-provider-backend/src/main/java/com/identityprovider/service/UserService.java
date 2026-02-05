@@ -20,6 +20,7 @@ public class UserService {
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
     
     @Transactional(readOnly = true)
     public UserResponse getUserById(Long userId) {
@@ -75,6 +76,9 @@ public class UserService {
         
         userRepository.save(user);
         log.info("Utilisateur {} déverrouillé", userId);
+        
+        // Envoyer la notification par email
+        emailService.sendUnblockNotification(user.getEmail(), user.getFirstName());
     }
     
     public UserResponse convertToUserResponse(User user) {
