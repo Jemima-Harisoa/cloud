@@ -1,0 +1,7 @@
+{
+  "name": "identity-provider-mobile-vue",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

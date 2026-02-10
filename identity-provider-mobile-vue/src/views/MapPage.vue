@@ -1,0 +1,671 @@
+<template>
+  <ion-page>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Carte - Travaux Routiers</ion-title>
+        <ion-button slot="end" fill="clear" @click="handleLogout" color="light">
+          <ion-icon slot="start" :icon="currentUser ? logOutOutline : logInOutline"></ion-icon>
+          <ion-label>{{ currentUser ? 'Déconnexion' : 'Connexion' }}</ion-label>
+        </ion-button>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="mobile-map-container">
+        <!-- Controls -->
+        <div class="map-controls ion-padding">
+          <ion-segment v-model="viewMode">
+            <ion-segment-button value="all">
+              <ion-label>Tous</ion-label>
+            </ion-segment-button>
+            <ion-segment-button v-if="currentUser" value="mine">
+              <ion-label>Mes signalements</ion-label>
+            </ion-segment-button>
+            <ion-segment-button v-if="currentUser?.role === 'MANAGER'" value="manager">
+              <ion-label>Manager</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+
+          <!-- Dashboard Recap (Visible for all) -->
+          <div v-if="viewMode !== 'manager'" class="dashboard-recap ion-margin-top">
+            <ion-grid>
+              <ion-row>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Points</span>
+                    <span class="stat-value">{{ stats.totalIssues || 0 }}</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Surface</span>
+                    <span class="stat-value">{{ stats.totalSurfaceM2?.toFixed(1) || 0 }} m²</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Budget</span>
+                    <span class="stat-value">{{ (stats.totalBudget || 0).toLocaleString() }} Ar</span>
+                  </div>
+                </ion-col>
+                <ion-col size="6">
+                  <div class="stat-card">
+                    <span class="stat-label">Avanc.</span>
+                    <span class="stat-value">{{ stats.completionPercentage?.toFixed(1) || 0 }}%</span>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </div>
+
+          <div v-if="viewMode === 'all'" class="ion-margin-top">
+            <ion-item>
+              <ion-select v-model="filter" label="Filtrer par statut" label-placement="floating">
+                <ion-select-option value="all">Tous</ion-select-option>
+                <ion-select-option value="NEW">Nouveaux</ion-select-option>
+                <ion-select-option value="IN_PROGRESS">En cours</ion-select-option>
+                <ion-select-option value="COMPLETED">Terminés</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </div>
+
+          <div v-if="viewMode === 'mine'" class="ion-margin-top">
+             <ion-button expand="block" color="success" @click="goToReport">
+               ➕ Signaler un problème
+             </ion-button>
+          </div>
+
+          <div v-if="viewMode === 'manager'" class="ion-margin-top">
+             <div class="ion-padding-horizontal">
+               <ion-button expand="block" color="tertiary" @click="handleSync" :disabled="syncing">
+                 <ion-icon slot="start" :icon="syncOutline"></ion-icon>
+                 {{ syncing ? 'Synchronisation...' : 'Synchroniser avec Firebase' }}
+               </ion-button>
+             </div>
+             <ion-list>
+               <ion-list-header>
+                 <ion-label>Gestion des Utilisateurs</ion-label>
+               </ion-list-header>
+               <ion-item v-if="allUsers.length === 0">
+                 <ion-label>Aucun utilisateur trouvé</ion-label>
+               </ion-item>
+               <ion-item v-for="user in allUsers" :key="user.id">
+                 <ion-label>
+                   <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+                   <p>{{ user.email }}</p>
+                   <ion-badge v-if="user.isBlocked" color="danger">Bloqué</ion-badge>
+                   <ion-badge v-else color="success">Actif</ion-badge>
+                   <ion-badge color="medium" class="ion-margin-start">{{ user.role }}</ion-badge>
+                 </ion-label>
+                 <div slot="end" class="user-actions">
+                   <ion-button v-if="user.isBlocked" color="success" fill="clear" @click="handleUnblock(user.id)">
+                     <ion-icon slot="icon-only" :icon="logInOutline"></ion-icon>Débloquer
+                   </ion-button>
+                   <ion-button v-if="user.email !== 'manager@example.com'" color="danger" fill="clear" @click="confirmDeleteUser(user.id)">
+                     <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
+                   </ion-button>
+                 </div>
+               </ion-item>
+             </ion-list>
+
+             <div class="ion-padding">
+               <ion-button expand="block" color="danger" fill="outline" @click="handleLogout">
+                 <ion-icon slot="start" :icon="logOutOutline"></ion-icon>
+                 Déconnexion
+               </ion-button>
+             </div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div v-show="viewMode !== 'manager'" id="map" style="height: 60vh; width: 100%;"></div>
+
+        <!-- List (Mobile view) -->
+        <div v-show="viewMode !== 'manager'" class="issues-list-mobile ion-padding">
+          <h3>{{ viewMode === 'mine' ? 'Mes signalements' : 'Signalements' }} ({{ issues.length }})</h3>
+          <ion-list>
+            <ion-item v-for="issue in issues" :key="issue.id" lines="none" class="issue-item">
+              <ion-label @click="focusOnIssue(issue)" class="clickable-label">
+                <h2>{{ issue.title || 'Sans titre' }}</h2>
+                <p v-if="issue.description">{{ issue.description }}</p>
+                <div class="status-row" @click.stop>
+                  <ion-badge :color="getStatusColor(issue.status)">{{ issue.status }}</ion-badge>
+                  
+                  <!-- Statut Editor for Manager or Owner -->
+                  <ion-select 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id" 
+                    :value="issue.status" 
+                    aria-label="Changer le statut"
+                    interface="popover"
+                    class="status-select"
+                    @ionChange="(e) => handleStatusUpdate(issue.id, e.detail.value)"
+                  >
+                    <ion-select-option value="NEW">NEW</ion-select-option>
+                    <ion-select-option value="IN_PROGRESS">IN PROGRESS</ion-select-option>
+                    <ion-select-option value="COMPLETED">COMPLETED</ion-select-option>
+                  </ion-select>
+                  
+                  <!-- Edit Button (Pencil) for Manager or Owner -->
+                  <ion-button 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id"
+                    fill="clear" 
+                    color="primary" 
+                    class="edit-btn"
+                    @click="handleEdit(issue)"
+                  >
+                    <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
+                  </ion-button>
+
+                  <!-- Delete Button for Manager or Owner -->
+                  <ion-button 
+                    v-if="currentUser?.role === 'MANAGER' || issue.reporterId === currentUser?.id"
+                    fill="clear" 
+                    color="danger" 
+                    class="delete-btn"
+                    @click="handleDelete(issue.id)"
+                  >
+                    <ion-icon slot="icon-only" :icon="trashOutline"></ion-icon>
+                  </ion-button>
+                </div>
+                <p v-if="issue.surfaceM2">Surface: {{ issue.surfaceM2 }} m²</p>
+                
+                <p v-if="issue.companyName" style="font-size: 0.8rem; color: #718096;">🏢 {{ issue.companyName }}</p>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
+
+        <!-- Edit Modal -->
+        <ion-modal :is-open="isEditModalOpen" @didDismiss="isEditModalOpen = false">
+          <ion-header>
+            <ion-toolbar color="primary">
+              <ion-title>Modifier le signalement</ion-title>
+              <ion-buttons slot="end">
+                <ion-button @click="isEditModalOpen = false">Fermer</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content class="ion-padding">
+            <div class="edit-form">
+              <ion-item>
+                <ion-input label="Titre" label-placement="floating" v-model="editData.title"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-textarea label="Description" label-placement="floating" v-model="editData.description" :rows="4"></ion-textarea>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Surface (m²)" label-placement="floating" type="number" v-model="editData.surfaceM2"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Budget (Ar)" label-placement="floating" type="number" v-model="editData.budget"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input label="Entreprise" label-placement="floating" v-model="editData.companyName"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-select label="Statut" label-placement="floating" v-model="editData.status">
+                  <ion-select-option value="NEW">NEW</ion-select-option>
+                  <ion-select-option value="IN_PROGRESS">IN PROGRESS</ion-select-option>
+                  <ion-select-option value="COMPLETED">COMPLETED</ion-select-option>
+                </ion-select>
+              </ion-item>
+
+              <div class="ion-padding-top">
+                <ion-button expand="block" color="success" @click="saveEdit" :disabled="savingEdit">
+                  <ion-icon slot="start" :icon="checkmarkOutline"></ion-icon>
+                  {{ savingEdit ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+                </ion-button>
+              </div>
+            </div>
+          </ion-content>
+        </ion-modal>
+      </div>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { 
+  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, 
+  IonSegment, IonSegmentButton, IonLabel, 
+  IonButton, IonIcon, IonItem, IonSelect, IonSelectOption,
+  IonList, IonBadge, IonListHeader, IonGrid, IonRow, IonCol,
+  toastController, alertController, IonButtons, IonModal, IonTextarea, IonInput,
+  onIonViewDidEnter
+} from '@ionic/vue';
+import { logOutOutline, logInOutline, syncOutline, trashOutline, createOutline, checkmarkOutline } from 'ionicons/icons';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import roadIssueService from '@/services/roadIssueService';
+import authService from '@/services/authService';
+
+const router = useRouter();
+const currentUser = authService.getCurrentUser();
+const issues = ref<any[]>([]);
+const blockedUsers = ref<any[]>([]); // Keeping for compatibility, but moving to allUsers
+const allUsers = ref<any[]>([]);
+const viewMode = ref('all');
+const filter = ref('all');
+const syncing = ref(false);
+const isEditModalOpen = ref(false);
+const savingEdit = ref(false);
+const editData = ref<any>({});
+const stats = ref<any>({
+  totalIssues: 0,
+  totalSurfaceM2: 0,
+  totalBudget: 0,
+  completionPercentage: 0
+});
+const markerMap = new Map<number, L.Marker>();
+let map: L.Map | null = null;
+let markers: L.LayerGroup | null = null;
+
+// Fix Leaflet icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const getMarkerIcon = (status: string) => {
+    const colors: any = {
+        'NEW': '#ef4444', // Red
+        'IN_PROGRESS': '#f59e0b', // Orange
+        'COMPLETED': '#10b981' // Green
+    };
+    const color = colors[status] || '#3b82f6';
+    
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color: ${color}; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [15, 15],
+        iconAnchor: [7, 7]
+    });
+};
+
+const loadBlockedUsers = async () => {
+  if (currentUser?.role === 'MANAGER') {
+    try {
+      blockedUsers.value = await authService.getBlockedUsers();
+      allUsers.value = await authService.getAllUsers();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+};
+
+const handleUnblock = async (userId: number) => {
+  try {
+    await authService.unblockUser(userId);
+    const toast = await toastController.create({
+      message: 'Utilisateur débloqué',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    loadBlockedUsers();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const confirmDeleteUser = async (userId: number) => {
+  const alert = await alertController.create({
+    header: 'Confirmer la suppression',
+    message: 'Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      {
+        text: 'Supprimer',
+        role: 'destructive',
+        handler: async () => {
+          try {
+            await authService.deleteUser(userId);
+            const toast = await toastController.create({
+              message: 'Utilisateur supprimé',
+              duration: 2000,
+              color: 'success'
+            });
+            await toast.present();
+            loadBlockedUsers(); // Refresh the list
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
+};
+
+const loadIssues = async () => {
+  try {
+    let data;
+
+    if (viewMode.value === 'mine' && currentUser?.id) {
+       data = await roadIssueService.getIssuesByReporter(currentUser.id);
+    } else if (filter.value !== 'all') {
+       data = await roadIssueService.getIssuesByStatus(filter.value);
+    } else {
+       data = await roadIssueService.getAllIssues();
+    }
+    issues.value = data;
+    setTimeout(() => {
+      updateMarkers();
+    }, 100);
+    fetchStats();
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const fetchStats = async () => {
+  try {
+    stats.value = await roadIssueService.getStatistics();
+  } catch (e) {
+    console.error('Error fetching stats:', e);
+  }
+};
+
+const handleSync = async () => {
+  syncing.value = true;
+  try {
+    await roadIssueService.syncWithFirebase();
+    const toast = await toastController.create({
+      message: 'Synchronisation réussie avec Firebase',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    loadIssues();
+  } catch (e) {
+    const toast = await toastController.create({
+      message: 'Erreur lors de la synchronisation',
+      duration: 3000,
+      color: 'danger'
+    });
+    await toast.present();
+  } finally {
+    syncing.value = false;
+  }
+};
+
+const updateMarkers = () => {
+  if (!map) return;
+  if (markers) map.removeLayer(markers);
+
+  markers = L.layerGroup().addTo(map);
+  markerMap.clear();
+
+  issues.value.forEach(issue => {
+    if (issue.latitude != null && issue.longitude != null) {
+      const marker = L.marker([issue.latitude, issue.longitude], {
+        icon: getMarkerIcon(issue.status)
+      })
+      .bindPopup(`
+        <div style="padding: 5px; min-width: 150px;">
+          <b style="font-size: 1.1rem; color: #1a202c;">${issue.title || 'Sans titre'}</b><br>
+          <span style="color: #718096; font-size: 0.8rem;">Statut: ${issue.status}</span><br>
+          <div style="margin: 5px 0; border-top: 1px solid #eee; padding-top: 5px;">
+             ${issue.surfaceM2 ? `<b>Surface:</b> ${issue.surfaceM2} m²<br>` : ''}
+             ${issue.budget ? `<b>Budget:</b> ${issue.budget.toLocaleString()} Ar<br>` : ''}
+             ${issue.companyName ? `<b>Entreprise:</b> ${issue.companyName}<br>` : ''}
+          </div>
+          <p style="margin: 5px 0 0 0; font-size: 0.9rem;">${issue.description || ''}</p>
+        </div>
+      `);
+      
+      marker.addTo(markers!);
+      markerMap.set(issue.id, marker);
+    }
+  });
+};
+
+const handleLogout = () => {
+  authService.logout();
+  window.location.href = '/login';
+};
+
+const goToReport = () => {
+    router.push('/report-issue');
+};
+
+const focusOnIssue = (issue: any) => {
+  if (issue.latitude != null && issue.longitude != null && map) {
+    map.setView([issue.latitude, issue.longitude], 16);
+    const marker = markerMap.get(issue.id);
+    if (marker) {
+      setTimeout(() => {
+        marker.openPopup();
+      }, 300);
+    }
+    // Scroll map into view on mobile
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+      mapElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+};
+
+const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'NEW': return 'danger';
+      case 'IN_PROGRESS': return 'warning';
+      case 'COMPLETED': return 'success';
+      default: return 'medium';
+    }
+};
+
+const handleStatusUpdate = async (id: number, newStatus: string) => {
+  try {
+    await roadIssueService.updateIssue(id, { status: newStatus }, currentUser?.id, currentUser?.role);
+    const toast = await toastController.create({
+      message: 'Statut mis à jour',
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
+    await toast.present();
+    loadIssues();
+  } catch (e) {
+    console.error('Error updating status:', e);
+  }
+};
+
+const handleEdit = (issue: any) => {
+  editData.value = { ...issue };
+  isEditModalOpen.value = true;
+};
+
+const saveEdit = async () => {
+  if (!editData.value.id) return;
+  
+  savingEdit.value = true;
+  try {
+    await roadIssueService.updateIssue(
+      editData.value.id, 
+      editData.value, 
+      currentUser?.id, 
+      currentUser?.role
+    );
+    
+    const toast = await toastController.create({
+      message: 'Signalement mis à jour avec succès',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    
+    isEditModalOpen.value = false;
+    loadIssues();
+  } catch (e) {
+    console.error('Error saving edit:', e);
+    const toast = await toastController.create({
+      message: 'Erreur lors de la mise à jour',
+      duration: 3000,
+      color: 'danger'
+    });
+    await toast.present();
+  } finally {
+    savingEdit.value = false;
+  }
+};
+
+const handleDelete = async (id: number) => {
+  const alert = await alertController.create({
+    header: 'Confirmer',
+    message: 'Voulez-vous vraiment supprimer ce signalement ?',
+    buttons: [
+      { text: 'Annuler', role: 'cancel' },
+      { 
+        text: 'Supprimer', 
+        handler: async () => {
+          try {
+            await roadIssueService.deleteIssue(id, currentUser.id, currentUser.role);
+            const toast = await toastController.create({
+              message: 'Signalement supprimé',
+              duration: 2000,
+              color: 'success'
+            });
+            await toast.present();
+            loadIssues();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+    ]
+  });
+  await alert.present();
+};
+
+onMounted(() => {
+  map = L.map('map').setView([-18.8792, 47.5079], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  
+  loadIssues();
+});
+
+onIonViewDidEnter(() => {
+  loadIssues();
+});
+
+watch([viewMode, filter], () => {
+  loadIssues();
+  if (viewMode.value === 'manager') {
+    loadBlockedUsers();
+  }
+});
+</script>
+
+<style scoped>
+.map-controls {
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.dashboard-recap {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f4f9 100%);
+  border-radius: 10px;
+  padding: 12px 4px;
+  border: 1px solid #edf2f7;
+  transition: transform 0.2s;
+}
+
+.stat-card:active {
+  transform: scale(0.95);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 700;
+}
+
+.issues-list-mobile {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  margin-top: -20px;
+  position: relative;
+  z-index: 10;
+  min-height: 40vh;
+}
+
+.issue-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.issue-item h2 {
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 4px;
+}
+
+.clickable-label {
+  cursor: pointer;
+}
+
+.clickable-label:active {
+  background-color: rgba(0,0,0,0.05);
+}
+
+.issue-item p {
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.status-select {
+  --placeholder-color: var(--ion-color-primary);
+  --placeholder-opacity: 1;
+  font-size: 0.8rem;
+  max-width: 130px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 4px;
+}
+</style>
