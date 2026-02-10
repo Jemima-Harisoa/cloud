@@ -28,7 +28,7 @@ function MapView() {
             console.log('🔗 URL des tuiles utilisée:', response.data.tileUrl);
             setMapConfig(response.data);
         } catch (err) {
-            console.error('❌ Erreur lors du chargement de la carte:', err);
+            console.error('Erreur lors du chargement de la carte:', err);
             setError('Erreur lors du chargement de la carte');
         } finally {
             setLoading(false);
@@ -64,10 +64,10 @@ function MapView() {
                             attribution={mapConfig.attribution}
                             url={mapConfig.tileUrl || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
                             onLoad={() => {
-                                console.log('✅ Tuile chargée depuis:', mapConfig.tileUrl || 'OSM direct');
+                                console.log('Tuile chargée depuis:', mapConfig.tileUrl || 'OSM direct');
                             }}
                             onError={(error) => {
-                                console.error('❌ Erreur chargement tuile:', error);
+                                console.error('Erreur chargement tuile:', error);
                             }}
                         />
                         <Marker position={position}>

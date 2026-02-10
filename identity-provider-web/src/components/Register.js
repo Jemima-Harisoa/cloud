@@ -53,7 +53,7 @@ function Register() {
                 localStorage.setItem('user', JSON.stringify(response.data.user));
                 navigate('/user-dashboard');
             } else {
-                setError('Erreur: Token non reçu');
+                setError('Attent de validation: Votre compte est en attente de validation par un manager. Vous recevrez un email de confirmation une fois votre compte validé et vous pourrez alors vous connecter.');
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Erreur lors de l\'inscription');

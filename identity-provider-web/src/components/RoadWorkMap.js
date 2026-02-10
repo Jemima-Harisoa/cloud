@@ -28,7 +28,7 @@ const getMarkerIcon = (status) => {
     });
 };
 
-function RoadWorkMap({ userRole = 'visitor', userId = null }) {
+function RoadWorkMap({ userRole = 'visitor', userId = null, showMyIssuesOnly: propShowMyIssuesOnly = null }) {
     const [issues, setIssues] = useState([]);
     const [stats, setStats] = useState(null);
     const [selectedIssue, setSelectedIssue] = useState(null);
@@ -44,16 +44,27 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
 
     const center = [-18.8792, 47.5079]; // Antananarivo
 
+    // Use prop value if provided, otherwise use state
+    const effectiveShowMyIssuesOnly = propShowMyIssuesOnly !== null ? propShowMyIssuesOnly : showMyIssuesOnly;
+
     useEffect(() => {
         loadIssues();
-        loadStats();
-    }, [showMyIssuesOnly, userId]);
+    }, [effectiveShowMyIssuesOnly, userId]);
+
+    // Calculer les statistiques à partir des issues affichées
+    useEffect(() => {
+        if (issues.length > 0) {
+            calculateStats();
+        } else {
+            setStats(null);
+        }
+    }, [issues]);
 
     const loadIssues = async () => {
         try {
             setLoading(true);
             let url = '/road-issues';
-            if (showMyIssuesOnly && userId) {
+            if (effectiveShowMyIssuesOnly && userId) {
                 url += `?reporterId=${userId}`;
             }
             const response = await api.get(url);
@@ -65,13 +76,20 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
         }
     };
 
-    const loadStats = async () => {
-        try {
-            const response = await api.get('/road-issues/stats');
-            setStats(response.data);
-        } catch (error) {
-            console.error('Erreur lors du chargement des statistiques:', error);
-        }
+    const calculateStats = () => {
+        const totalIssues = issues.length;
+        const completedIssues = issues.filter(issue => issue.status === 'TERMINE').length;
+        const totalSurfaceM2 = issues.reduce((sum, issue) => sum + (issue.surfaceM2 || 0), 0);
+        const totalBudget = issues.reduce((sum, issue) => sum + (issue.budget || 0), 0);
+        const completionPercentage = totalIssues > 0 ? (completedIssues / totalIssues) * 100 : 0;
+
+        setStats({
+            totalIssues,
+            completedIssues,
+            totalSurfaceM2,
+            totalBudget,
+            completionPercentage
+        });
     };
 
     const handleUpdateIssue = async (issueId) => {
@@ -80,7 +98,6 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
             setEditMode(false);
             setSelectedIssue(null);
             loadIssues();
-            loadStats();
             alert('Signalement mis à jour avec succès');
         } catch (error) {
             console.error('Erreur lors de la mise à jour:', error);
@@ -94,7 +111,6 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                 await api.delete(`/road-issues/${issueId}`);
                 setSelectedIssue(null);
                 loadIssues();
-                loadStats();
                 alert('Signalement supprimé avec succès');
             } catch (error) {
                 console.error('Erreur lors de la suppression:', error);
@@ -152,8 +168,11 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                             Carte des Travaux Routiers
                         </h2>
                         {userRole === 'manager' && (
-                            <button onClick={handleSync} className="btn btn-primary">
-                                🔄 Synchroniser
+                            <button onClick={handleSync} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <svg style={{ width: '18px', height: '18px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Synchroniser
                             </button>
                         )}
                     </div>
@@ -175,7 +194,7 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                         <div className="card" style={{ textAlign: 'center' }}>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Budget total (Ar)</p>
                             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
-                                {stats.totalBudget?.toLocaleString() || 0}
+                                {stats.totalBudget?.toLocaleString('fr-FR') || 0}
                             </p>
                         </div>
                         <div className="card" style={{ textAlign: 'center' }}>
@@ -186,8 +205,8 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                         </div>
                     </div>
 
-                    {/* Filter for users */}
-                    {userRole === 'user' && (
+                    {/* Filter for users - only show if not controlled by parent */}
+                    {userRole === 'user' && propShowMyIssuesOnly === null && (
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                                 <input
@@ -254,7 +273,7 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                                     )}
                                     {issue.budget && (
                                         <p style={{ fontSize: '0.875rem' }}>
-                                            Budget: {issue.budget.toLocaleString()} Ar
+                                            Budget: {issue.budget.toLocaleString('fr-FR')} Ar
                                         </p>
                                     )}
                                     {issue.companyName && (

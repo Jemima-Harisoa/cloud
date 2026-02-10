@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS road_issues (
     firebase_id VARCHAR(255),
     synced_to_firebase BOOLEAN DEFAULT false,
     
-    CONSTRAINT chk_status CHECK (status IN ('NEW', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+    CONSTRAINT chk_status CHECK (status IN ('NOUVEAU', 'EN_COURS', 'TERMINE')),
     CONSTRAINT fk_issue_reporter FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -76,5 +76,6 @@ COMMENT ON TABLE road_issues IS 'Table des signalements de problèmes de route';
 -- Commentaires sur les colonnes importantes
 COMMENT ON COLUMN users.role IS 'Rôle: VISITOR, USER, ou MANAGER';
 COMMENT ON COLUMN users.is_blocked IS 'Indique si l''utilisateur est bloqué après plusieurs tentatives échouées';
-COMMENT ON COLUMN road_issues.status IS 'Statut: NEW, IN_PROGRESS, COMPLETED, ou CANCELLED';
+COMMENT ON COLUMN road_issues.status IS 'Statut: NOUVEAU, EN_COURS, ou TERMINE';
 COMMENT ON COLUMN road_issues.synced_to_firebase IS 'Indique si les données sont synchronisées avec Firebase';
+

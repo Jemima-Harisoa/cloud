@@ -110,7 +110,7 @@ VALUES
   -18.8792,
   47.5079,
   'Nid de poule dangereux Avenue de l''Indépendance, en face du Palais de la Reine. Trou profond d''environ 30cm qui endommage les véhicules.',
-  'NEW',
+  'NOUVEAU',
   3.5,
   180000.00,
   NULL,
@@ -125,7 +125,7 @@ VALUES
   -18.8850,
   47.5100,
   'Chaussée affaissée Rue Rainibetsimisaraka, urgent car zone scolaire. Risque d''accident pour les enfants.',
-  'NEW',
+  'NOUVEAU',
   12.0,
   450000.00,
   NULL,
@@ -140,7 +140,7 @@ VALUES
   -18.8910,
   47.5280,
   'Caniveau bouché causant des inondations. L''eau stagne sur la route lors des pluies.',
-  'NEW',
+  'NOUVEAU',
   8.5,
   320000.00,
   NULL,
@@ -156,7 +156,7 @@ VALUES
   -18.8720,
   47.5150,
   'Route dégradée Boulevard de l''Europe sur 100 mètres. Multiples nids de poule nécessitant réfection complète.',
-  'IN_PROGRESS',
+  'EN_COURS',
   85.0,
   2500000.00,
   'TRAVAUX PUBLICS MADAGASCAR',
@@ -171,7 +171,7 @@ VALUES
   -18.8650,
   47.5050,
   'Réparation des marquages au sol effacés Tunnel d''Ampefiloha. Passages piétons et lignes de circulation à refaire.',
-  'IN_PROGRESS',
+  'EN_COURS',
   45.0,
   650000.00,
   'ENTREPRISE ROUTIÈRE NATIONALE',
@@ -186,7 +186,7 @@ VALUES
   -18.8580,
   47.4980,
   'Trottoir cassé Avenue Grandidier, plusieurs dalles soulevées et dangereuses pour les piétons.',
-  'IN_PROGRESS',
+  'EN_COURS',
   28.0,
   890000.00,
   'SARL BÂTIMENT PLUS',
@@ -202,7 +202,7 @@ VALUES
   -18.9000,
   47.5320,
   'Nid de poule Rue Rabearivelo. Réparé avec du goudron neuf.',
-  'COMPLETED',
+  'TERMINE',
   2.5,
   125000.00,
   'TRAVAUX COMMUNAUX',
@@ -217,7 +217,7 @@ VALUES
   -18.8450,
   47.5200,
   'Réfection complète intersection Route Circulaire. Travaux de nivellement et asphaltage terminés.',
-  'COMPLETED',
+  'TERMINE',
   120.0,
   4200000.00,
   'COLAS MADAGASCAR',
@@ -232,7 +232,7 @@ VALUES
   -18.8920,
   47.5400,
   'Réparation d''un petit trou Rue de Liège. Intervention rapide effectuée.',
-  'COMPLETED',
+  'TERMINE',
   1.8,
   75000.00,
   'SERVICE MUNICIPAL',
@@ -248,7 +248,7 @@ VALUES
   -18.8680,
   47.5120,
   'Affaissement signalé Avenue Général de Gaulle - Fausse alerte, simple ombre sur la chaussée.',
-  'CANCELLED',
+  'TERMINE',
   0,
   0,
   NULL,
@@ -264,7 +264,7 @@ VALUES
   -18.8825,
   47.5185,
   'Fissure importante apparue après les pluies. Route nationale 2 direction Toamasina.',
-  'NEW',
+  'NOUVEAU',
   15.5,
   780000.00,
   NULL,
@@ -279,7 +279,7 @@ VALUES
   -18.8550,
   47.5350,
   'Dos d''âne endommagé près de l''hôpital. Ralentisseur cassé, dangereux pour les motos.',
-  'NEW',
+  'NOUVEAU',
   6.0,
   250000.00,
   NULL,
@@ -359,10 +359,9 @@ ORDER BY id;
 SELECT 
   '========== SIGNALEMENTS ==========' as section,
   COUNT(*) as total_issues,
-  COUNT(CASE WHEN status = 'NEW' THEN 1 END) as nouveaux,
-  COUNT(CASE WHEN status = 'IN_PROGRESS' THEN 1 END) as en_cours,
-  COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as termines,
-  COUNT(CASE WHEN status = 'CANCELLED' THEN 1 END) as annules,
+  COUNT(CASE WHEN status = 'NOUVEAU' THEN 1 END) as nouveaux,
+  COUNT(CASE WHEN status = 'EN_COURS' THEN 1 END) as en_cours,
+  COUNT(CASE WHEN status = 'TERMINE' THEN 1 END) as termines,
   ROUND(SUM(surface_m2)::numeric, 2) as surface_totale_m2,
   SUM(budget) as budget_total_ar
 FROM road_issues;
@@ -416,8 +415,7 @@ FROM road_issues
 GROUP BY status
 ORDER BY 
   CASE status
-    WHEN 'NEW' THEN 1
-    WHEN 'IN_PROGRESS' THEN 2
-    WHEN 'COMPLETED' THEN 3
-    WHEN 'CANCELLED' THEN 4
+    WHEN 'NOUVEAU' THEN 1
+    WHEN 'EN_COURS' THEN 2
+    WHEN 'TERMINE' THEN 3
   END;

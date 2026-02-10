@@ -64,10 +64,38 @@ public class AuthController {
         return ResponseEntity.ok("Utilisateur débloqué avec succès");
     }
 
+    @PostMapping("/block/{userId}")
+    @Operation(summary = "Bloquer un utilisateur", description = "Bloque l'accès pour un utilisateur donné")
+    public ResponseEntity<String> blockUser(@PathVariable Long userId) {
+        authService.blockUser(userId);
+        return ResponseEntity.ok("Utilisateur bloqué avec succès");
+    }
+
     @GetMapping("/blocked-users")
     @Operation(summary = "Récupérer tous les utilisateurs bloqués")
     public ResponseEntity<java.util.List<UserResponse>> getBlockedUsers() {
         java.util.List<UserResponse> blockedUsers = authService.getBlockedUsers();
         return ResponseEntity.ok(blockedUsers);
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Récupérer tous les utilisateurs")
+    public ResponseEntity<java.util.List<UserResponse>> getAllUsers() {
+        java.util.List<UserResponse> users = authService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/pending-users")
+    @Operation(summary = "Récupérer les utilisateurs en attente de validation")
+    public ResponseEntity<java.util.List<UserResponse>> getPendingUsers() {
+        java.util.List<UserResponse> pendingUsers = authService.getPendingUsers();
+        return ResponseEntity.ok(pendingUsers);
+    }
+
+    @PostMapping("/activate/{userId}")
+    @Operation(summary = "Activer un utilisateur", description = "Valide l'inscription d'un utilisateur")
+    public ResponseEntity<String> activateUser(@PathVariable Long userId) {
+        authService.activateUser(userId);
+        return ResponseEntity.ok("Utilisateur activé avec succès");
     }
 }

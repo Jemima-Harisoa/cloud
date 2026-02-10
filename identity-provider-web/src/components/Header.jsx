@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import '../styles/Header.css';
 
 function Header({ user, showLogout = true }) {
     const navigate = useNavigate();
@@ -11,54 +12,28 @@ function Header({ user, showLogout = true }) {
     };
 
     return (
-        <header style={{
-            background: '#ffffff',
-            borderBottom: '1px solid #e5e7eb',
-            padding: '16px 24px',
-            position: 'sticky',
-            top: 0,
-            zIndex: 100,
-        }}>
-            <div style={{
-                maxWidth: '1400px',
-                margin: '0 auto',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-            }}>
-                <Link to="/" style={{ textDecoration: 'none' }}>
-                    <div style={{
-                        fontSize: '24px',
-                        fontWeight: '700',
-                        color: '#10b981',
-                        letterSpacing: '-0.5px',
-                        fontFamily: 'Georgia, serif',
-                    }}>
+        <header className="app-header">
+            <div className="header-container">
+                <Link to="/" className="header-logo-link">
+                    <div className="header-logo">
                         signal.eo
                     </div>
                 </Link>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                <div className="header-actions">
                     {user && (
                         <>
-                            <div style={{ fontSize: '15px', color: '#6b7280' }}>
+                            <div className="header-user-info">
                                 {user.firstName} {user.lastName}
                             </div>
                             {showLogout && (
                                 <button
                                     onClick={handleLogout}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#ef4444',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '15px',
-                                        transition: 'all 0.3s ease',
-                                    }}
-                                    onMouseOver={(e) => e.target.style.color = '#dc2626'}
-                                    onMouseOut={(e) => e.target.style.color = '#ef4444'}
+                                    className="header-logout-btn"
                                 >
+                                    <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
                                     Déconnexion
                                 </button>
                             )}

@@ -147,7 +147,7 @@ function MapDebugger() {
                             attribution={mapConfig.attribution}
                             url={mapConfig.tileUrl}
                             onLoad={() => console.log('🗺️ Tuile chargée depuis:', mapConfig.tileUrl)}
-                            onError={(error) => console.error('❌ Erreur chargement tuile:', error)}
+                            onError={(error) => console.error('Erreur chargement tuile:', error)}
                         />
                         <Marker position={position}>
                             <Popup>

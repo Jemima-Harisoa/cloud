@@ -52,14 +52,14 @@ function VisitorPage() {
                 </section>
 
                 <section className="visitor-stats-section">
-                    <h2>📊 Statistiques Actuelles</h2>
+                    <h2>Statistiques Actuelles</h2>
                     <p className="stats-description">
                         Voici un récapitulatif des travaux routiers d'Antananarivo
                     </p>
                 </section>
 
                 <section className="map-section">
-                    <h2>🗺️ Carte Interactive</h2>
+                    <h2>Carte Interactive</h2>
                     <div className="map-container">
                         <RoadWorkMap 
                             userRole="visitor"
@@ -68,7 +68,7 @@ function VisitorPage() {
                 </section>
 
                 <section className="visitor-footer">
-                    <h2>👤 Vous Avez Un Compte?</h2>
+                    <h2>Vous Avez Un Compte?</h2>
                     <p>
                         Connectez-vous pour signaler et suivre les travaux routiers!
                     </p>
@@ -76,7 +76,7 @@ function VisitorPage() {
                         className="btn-login-large"
                         onClick={() => window.location.href = '/login'}
                     >
-                        🔐 Se Connecter Maintenant
+                        Se Connecter Maintenant
                     </button>
                 </section>
             </div>
