@@ -19,5 +19,15 @@ Thumbs.db
 cypress/screenshots/
 cypress/videos/
 
-# Ignorer les fichiers de backup dans data
-data/
+# Ignorer les fichiers de build
+dist/
+build/
+
+# Ignorer les fichiers de configuration de l'IDE
+.idea/
+.vscode/
+
+
+# Ignorer la version react native
+identity-provider-mobile-react/**
+identity-provider-mobile/**
