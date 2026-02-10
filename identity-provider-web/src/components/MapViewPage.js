@@ -80,7 +80,7 @@ function MapView() {
             </div>
             <div className="stat-item">
               <span className="stat-label">Budget:</span>
-              <span className="stat-value">{(stats.totalBudget / 1000000)?.toFixed(1)}M Ar</span>
+              <span className="stat-value">{stats.totalBudget?.toLocaleString('fr-FR')} Ar</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Avancement:</span>
@@ -118,7 +118,7 @@ function MapView() {
                 <p className="issue-description">{issue.description}</p>
                 <div className="issue-details">
                   <span>Surface: {issue.surfaceArea?.toFixed(0)} m²</span>
-                  <span>Budget: {(issue.budget / 1000000)?.toFixed(1)}M Ar</span>
+                  <span>Budget: {issue.budget?.toLocaleString('fr-FR')} Ar</span>
                 </div>
                 {issue.company && <p className="issue-company">Entreprise: {issue.company}</p>}
               </div>
@@ -147,7 +147,7 @@ function MapView() {
                     <h3>{issue.title}</h3>
                     <p><strong>Statut:</strong> {getStatusLabel(issue.status)}</p>
                     <p><strong>Surface:</strong> {issue.surfaceArea?.toFixed(0)} m²</p>
-                    <p><strong>Budget:</strong> {(issue.budget / 1000000)?.toFixed(1)}M Ar</p>
+                    <p><strong>Budget:</strong> {issue.budget?.toLocaleString('fr-FR')} Ar</p>
                     {issue.company && <p><strong>Entreprise:</strong> {issue.company}</p>}
                     {issue.priority && <p><strong>Priorité:</strong> {issue.priority}</p>}
                   </div>

@@ -117,7 +117,7 @@ function ManagerDashboard() {
                 </div>
                 <div className="stat-card">
                   <h3>Budget Total</h3>
-                  <p className="stat-number">{(stats.totalBudget / 1000000)?.toFixed(1)}M Ar</p>
+                  <p className="stat-number">{stats.totalBudget?.toLocaleString('fr-FR')} Ar</p>
                 </div>
                 <div className="stat-card">
                   <h3>Avancement</h3>
@@ -176,7 +176,7 @@ function ManagerDashboard() {
                       </span>
                     </td>
                     <td>{issue.surfaceArea?.toFixed(0)}</td>
-                    <td>{(issue.budget / 1000000)?.toFixed(1)}M</td>
+                    <td>{issue.budget?.toLocaleString('fr-FR')}</td>
                     <td>{issue.company || '-'}</td>
                     <td>{new Date(issue.createdAt).toLocaleDateString('fr-FR')}</td>
                   </tr>

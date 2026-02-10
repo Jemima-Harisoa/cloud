@@ -194,7 +194,7 @@ function RoadWorkMap({ userRole = 'visitor', userId = null, showMyIssuesOnly: pr
                         <div className="card" style={{ textAlign: 'center' }}>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Budget total (Ar)</p>
                             <p style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
-                                {stats.totalBudget?.toLocaleString() || 0}
+                                {stats.totalBudget?.toLocaleString('fr-FR') || 0}
                             </p>
                         </div>
                         <div className="card" style={{ textAlign: 'center' }}>
@@ -273,7 +273,7 @@ function RoadWorkMap({ userRole = 'visitor', userId = null, showMyIssuesOnly: pr
                                     )}
                                     {issue.budget && (
                                         <p style={{ fontSize: '0.875rem' }}>
-                                            Budget: {issue.budget.toLocaleString()} Ar
+                                            Budget: {issue.budget.toLocaleString('fr-FR')} Ar
                                         </p>
                                     )}
                                     {issue.companyName && (

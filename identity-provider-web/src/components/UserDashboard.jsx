@@ -199,7 +199,7 @@ function UserDashboard() {
                                             </svg>
                                         </div>
                                         <div className="stat-value">
-                                            {stats.totalBudget ? (stats.totalBudget / 1000000).toFixed(2) + 'M' : 0} Ar
+                                            {stats.totalBudget ? stats.totalBudget.toLocaleString('fr-FR') : 0} Ar
                                         </div>
                                         <div className="stat-label">Budget Total</div>
                                     </div>
