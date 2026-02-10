@@ -17,10 +17,10 @@ function UserDashboard() {
     }, []);
 
     useEffect(() => {
-        if (activeTab === 'stats') {
+        if (activeTab === 'stats' && user) {
             loadStatistics();
         }
-    }, [activeTab]);
+    }, [activeTab, user]);
 
     const loadStatistics = async () => {
         if (!user?.id) return;
@@ -34,12 +34,16 @@ function UserDashboard() {
                 // Calculer les statistiques personnelles
                 const totalIssues = userIssues.length;
                 const completedIssues = userIssues.filter(issue => issue.status === 'TERMINE').length;
+                const inProgressIssues = userIssues.filter(issue => issue.status === 'EN_COURS').length;
+                const newIssues = userIssues.filter(issue => issue.status === 'NOUVEAU').length;
                 const totalSurface = userIssues.reduce((sum, issue) => sum + (issue.surfaceM2 || 0), 0);
                 const totalBudget = userIssues.reduce((sum, issue) => sum + (issue.budget || 0), 0);
                 
                 setStats({
                     totalIssues,
                     completedIssues,
+                    inProgressIssues,
+                    newIssues,
                     totalSurface,
                     totalBudget
                 });
@@ -113,40 +117,60 @@ function UserDashboard() {
                 {/* TAB 3: STATISTIQUES */}
                 {activeTab === 'stats' && (
                     <section className="stats-section">
-                        <h2>📊 Statistiques des Signalements</h2>
+                        <h2>📊 Mes Statistiques</h2>
                         <p className="stats-description">
-                            Vue d'ensemble des travaux routiers à Antananarivo
+                            Vue d'ensemble de vos propres signalements de travaux routiers
                         </p>
 
                         {!stats ? (
-                            <div className="loading">Chargement des statistiques...</div>
-                        ) : (
-                            <div className="stats-grid">
-                                <div className="stat-card">
-                                    <div className="stat-icon">📍</div>
-                                    <div className="stat-value">{stats.totalIssues || 0}</div>
-                                    <div className="stat-label">Signalements Total</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">✅</div>
-                                    <div className="stat-value">{stats.completedIssues || 0}</div>
-                                    <div className="stat-label">Travaux Terminés</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">📐</div>
-                                    <div className="stat-value">
-                                        {stats.totalSurface ? stats.totalSurface.toFixed(2) : 0} m²
-                                    </div>
-                                    <div className="stat-label">Surface Totale</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">💰</div>
-                                    <div className="stat-value">
-                                        {stats.totalBudget ? (stats.totalBudget / 1000000).toFixed(2) + 'M' : 0} Ar
-                                    </div>
-                                    <div className="stat-label">Budget Total</div>
-                                </div>
+                            <div className="loading">Chargement de vos statistiques...</div>
+                        ) : stats.totalIssues === 0 ? (
+                            <div className="no-data-stats">
+                                <p>Vous n'avez pas encore de signalements.</p>
+                                <p>Rendez-vous dans l'onglet "Mes Signalements" pour en créer.</p>
                             </div>
+                        ) : (
+                            <>
+                                <div className="stats-grid">
+                                    <div className="stat-card stat-card-primary">
+                                        <div className="stat-icon">📍</div>
+                                        <div className="stat-value">{stats.totalIssues || 0}</div>
+                                        <div className="stat-label">Total Signalements</div>
+                                    </div>
+                                    <div className="stat-card stat-card-new">
+                                        <div className="stat-icon">🆕</div>
+                                        <div className="stat-value">{stats.newIssues || 0}</div>
+                                        <div className="stat-label">Nouveaux</div>
+                                    </div>
+                                    <div className="stat-card stat-card-progress">
+                                        <div className="stat-icon">🚧</div>
+                                        <div className="stat-value">{stats.inProgressIssues || 0}</div>
+                                        <div className="stat-label">En Cours</div>
+                                    </div>
+                                    <div className="stat-card stat-card-completed">
+                                        <div className="stat-icon">✅</div>
+                                        <div className="stat-value">{stats.completedIssues || 0}</div>
+                                        <div className="stat-label">Terminés</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="stats-grid stats-grid-secondary">
+                                    <div className="stat-card">
+                                        <div className="stat-icon">📐</div>
+                                        <div className="stat-value">
+                                            {stats.totalSurface ? stats.totalSurface.toFixed(2) : 0} m²
+                                        </div>
+                                        <div className="stat-label">Surface Totale</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-icon">💰</div>
+                                        <div className="stat-value">
+                                            {stats.totalBudget ? (stats.totalBudget / 1000000).toFixed(2) + 'M' : 0} Ar
+                                        </div>
+                                        <div className="stat-label">Budget Total</div>
+                                    </div>
+                                </div>
+                            </>
                         )}
                     </section>
                 )}
