@@ -6,6 +6,8 @@ import UserDashboard from './components/UserDashboard';
 import ManagerPage from './components/ManagerPage';
 import VisitorPage from './components/VisitorPage';
 import Profile from './components/Profile';
+import TileServerStatus from './components/TileServerStatus';
+import MapDebugger from './components/MapDebugger';
 import './index.css';
 
 // Composant pour protéger les routes
@@ -42,6 +44,8 @@ function App() {
                 <Route path="/visitor" element={<VisitorPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/tile-server-status" element={<TileServerStatus />} />
+                <Route path="/map-debugger" element={<MapDebugger />} />
                 
                 {/* Routes protégées - UTILISATEUR */}
                 <Route

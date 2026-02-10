@@ -32,7 +32,8 @@ public class MapController {
         config.put("center", center);
         config.put("zoom", 13);
         config.put("tileServerUrl", tileServerUrl);
-        config.put("attribution", "© OpenStreetMap contributors");
+        config.put("tileUrl", tileServerUrl + "/tile/{z}/{x}/{y}.png");
+        config.put("attribution", "© OpenStreetMap contributors via Local Tile Server");
 
         return ResponseEntity.ok(config);
     }

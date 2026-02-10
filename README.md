@@ -4,11 +4,17 @@ Système de fournisseur d'identité avec modules d'authentification et de cartes
 
 ## 🚀 Démarrage rapide
 
+### Services avec Docker
+```bash
+# Démarrer tous les services (PostgreSQL + Serveur de tuiles)
+docker-compose up -d
+
+# Ou démarrer seulement certains services
+docker-compose up -d postgres tile-server
+```
+
 ### Backend
 ```bash
-# Démarrer PostgreSQL
-docker-compose up -d postgres
-
 # Lancer le backend
 cd identity-provider-backend
 mvn spring-boot:run
@@ -27,6 +33,29 @@ cd identity-provider-mobile
 npm install
 ionic serve
 ```
+
+## 🗺️ Serveur de tuiles
+
+Le projet intègre un serveur de tuiles local pour les cartes.
+
+### Configuration
+- **Port**: 8081
+- **Endpoint**: http://localhost:8081/tile/{z}/{x}/{y}.png
+- **Source**: OpenStreetMap via proxy nginx
+
+### Test de connectivité
+```bash
+# Avec PowerShell (Windows)
+.\scripts\test-tiles-connectivity.ps1
+
+# Ou via l'interface web
+http://localhost:3000/tile-server-status
+```
+
+### Utilisation dans le code
+Le frontend web récupère automatiquement l'URL du serveur de tuiles via l'API backend :
+- Configuration: `GET /api/maps/config`
+- Status: `GET /api/maps/tile-server-status`
 
 ## 📚 Documentation
 

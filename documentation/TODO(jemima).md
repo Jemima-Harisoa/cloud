@@ -43,24 +43,24 @@ Module Cartes
   - **Résultat attendu**: `Docker Compose version 2.x` ou plus récent
   - **Si erreur**: Installer Docker Compose (inclus avec Docker Desktop)
 
-- [ ] Au least 5GB d'espace disque disponible pour les données
+- [ ] Au moins 5GB d'espace disque disponible pour les données
   - **Commande à exécuter**: 
-    ```bash
-    df -h
+    ```powershell
+    Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, @{Name="Size(GB)";Expression={[math]::Round($_.Size/1GB,2)}}, @{Name="FreeSpace(GB)";Expression={[math]::Round($_.FreeSpace/1GB,2)}}
     ```
 
 ### Tâche 1.2: Créer le répertoire pour les données
-- [ ] Créer le dossier de stockage des cartes
-  ```bash
-  mkdir -p ~/identity-provider/tile-server/data
-  mkdir -p ~/identity-provider/tile-server/styles
-  chmod 777 ~/identity-provider/tile-server/data
+- [X] Créer le dossier de stockage des cartes
+  ```powershell
+  New-Item -ItemType Directory -Path "./tile-server/data" -Force
+  New-Item -ItemType Directory -Path "./tile-server/styles" -Force
+  # Permissions automatiquement gérées par Windows
   ```
 
 ### Tâche 1.3: Récupérer le docker-compose
 - [ ] Copier/créer le fichier `docker-compose.yml` dans le dossier racine du projet
-  ```bash
-  # Localistion: /home/ainasatamandresy/Bureau/Aina dossier/L3-Mandresy/naina/cloud/docker-compose.yml
+  ```powershell
+  # Localisation: C:\Users\ACER\Desktop\L3\cloud\docker-compose.yml
   ```
 
 - [ ] Vérifier que le service `tile-server` existe dans le fichier
@@ -94,178 +94,179 @@ Module Cartes
 ## ✅ PHASE 2: TÉLÉCHARGEMENT DES DONNÉES (45-60 min)
 
 ### Tâche 2.1: Créer le script de téléchargement
-- [ ] Créer le fichier `scripts/download-map-data.sh`
-  ```bash
-  mkdir -p scripts
+- [ ] Créer le fichier `scripts/download-map-data.ps1`
+  ```powershell
+  New-Item -ItemType Directory -Path "scripts" -Force
   ```
 
 - [ ] Contenu du script:
-  ```bash
-  #!/bin/bash
+  ```powershell
   # Script de téléchargement des données OpenStreetMap pour Antananarivo
   
-  set -e  # Arrêter en cas d'erreur
+  $ErrorActionPreference = "Stop"  # Arrêter en cas d'erreur
   
-  echo "📥 Téléchargement des données OpenStreetMap pour Antananarivo..."
+  Write-Host "📥 Téléchargement des données OpenStreetMap pour Antananarivo..." -ForegroundColor Green
   
-  TILE_SERVER_DATA_DIR="./tile-server/data"
-  mkdir -p $TILE_SERVER_DATA_DIR
+  $TILE_SERVER_DATA_DIR = "./tile-server/data"
+  New-Item -ItemType Directory -Path $TILE_SERVER_DATA_DIR -Force | Out-Null
   
   # URL pour les données d'Antananarivo depuis Geofabrik
   # Format: Région > Pays > Sous-région
   # URL: Afrique > Madagascar > Région Vakinankaratra (contient Antananarivo)
   
-  echo "⏳ Cela peut prendre 10-20 minutes..."
-  echo "📍 Source: Geofabrik (OpenStreetMap)"
+  Write-Host "⏳ Cela peut prendre 10-20 minutes..." -ForegroundColor Yellow
+  Write-Host "📍 Source: Geofabrik (OpenStreetMap)" -ForegroundColor Cyan
   
   # Option 1: Télécharger la région entière de Madagascar (plus facile)
-  cd $TILE_SERVER_DATA_DIR
+  Set-Location $TILE_SERVER_DATA_DIR
   
-  if [ ! -f "madagascar-latest.osm.pbf" ]; then
-    echo "Téléchargement de Madagascar..."
-    wget -c https://download.geofabrik.de/africa/madagascar-latest.osm.pbf
-  else
-    echo "✅ Fichier madagascar-latest.osm.pbf existe déjà"
-  fi
+  if (-not (Test-Path "madagascar-latest.osm.pbf")) {
+    Write-Host "Téléchargement de Madagascar..." -ForegroundColor Yellow
+    Invoke-WebRequest -Uri "https://download.geofabrik.de/africa/madagascar-latest.osm.pbf" -OutFile "madagascar-latest.osm.pbf"
+  } else {
+    Write-Host "✅ Fichier madagascar-latest.osm.pbf existe déjà" -ForegroundColor Green
+  }
   
-  echo "✅ Téléchargement terminé!"
-  echo "📊 Taille du fichier: $(du -h madagascar-latest.osm.pbf | cut -f1)"
+  Write-Host "✅ Téléchargement terminé!" -ForegroundColor Green
+  $fileSize = (Get-Item "madagascar-latest.osm.pbf").Length / 1MB
+  Write-Host "📊 Taille du fichier: $([math]::Round($fileSize, 2)) MB" -ForegroundColor Cyan
   
-  cd -
+  Set-Location ..\..
   
-  echo "⚠️  Prochaine étape: Convertir le fichier PBF en MBTiles"
-  echo "Utiliser: tippecanoe ou tilemaker"
+  Write-Host "⚠️  Prochaine étape: Convertir le fichier PBF en MBTiles" -ForegroundColor Yellow
+  Write-Host "Utiliser: tippecanoe ou tilemaker" -ForegroundColor Yellow
   ```
 
-- [ ] Rendre le script exécutable
-  ```bash
-  chmod +x scripts/download-map-data.sh
+- [ ] Le script PowerShell est déjà exécutable
+  ```powershell
+  # Vérifier la politique d'exécution (si nécessaire)
+  Get-ExecutionPolicy
+  # Si RestrictedAllSigned, exécuter: Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
   ```
 
 ### Tâche 2.2: Exécuter le téléchargement
 - [ ] Lancer le script
-  ```bash
-  ./scripts/download-map-data.sh
+  ```powershell
+  .\scripts\download-map-data.ps1
   ```
   
 - [ ] ⏳ **Attention**: Cela peut prendre 10-20 minutes selon votre connexion
   - **Pendant ce temps**: Vous pouvez commencer à lire la documentation de Leaflet
 
 - [ ] Vérifier que le fichier a été téléchargé
-  ```bash
-  ls -lh ./tile-server/data/
+  ```powershell
+  Get-ChildItem ./tile-server/data/ | Format-Table Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB,2)}}
   ```
   - **Résultat attendu**: Un fichier `madagascar-latest.osm.pbf` de ~250-300MB
 
 ### Tâche 2.3: Convertir les données en format MBTiles
-- [ ] Installer tilemaker (outil de conversion)
-  ```bash
-  # Sur macOS
-  brew install tilemaker
+- [ ] Installer tilemaker (outil de conversion) sur Windows
+  ```powershell
+  # Option 1: Avec Chocolatey (recommandé)
+  choco install tilemaker
   
-  # Sur Ubuntu/Debian
-  sudo apt-get install tilemaker
+  # Option 2: Avec Scoop
+  scoop install tilemaker
   
-  # Sur Windows avec WSL
-  sudo apt-get install tilemaker
+  # Option 3: WSL (Windows Subsystem for Linux)
+  wsl sudo apt-get install tilemaker
+  
+  # Option 4: Télécharger depuis GitHub releases
+  # https://github.com/systemed/tilemaker/releases
   ```
 
 - [ ] Créer le script de conversion
-  ```bash
-  cat > scripts/convert-map-data.sh << 'EOF'
-  #!/bin/bash
+  ```powershell
+  @'
+  # Script de conversion des données OpenStreetMap en MBTiles
   
-  set -e
+  $ErrorActionPreference = "Stop"
   
-  echo "🔄 Conversion des données OpenStreetMap en MBTiles..."
+  Write-Host "🔄 Conversion des données OpenStreetMap en MBTiles..." -ForegroundColor Green
   
-  TILE_SERVER_DATA_DIR="./tile-server/data"
-  INPUT_FILE="$TILE_SERVER_DATA_DIR/madagascar-latest.osm.pbf"
-  OUTPUT_FILE="$TILE_SERVER_DATA_DIR/madagascar.mbtiles"
+  $TILE_SERVER_DATA_DIR = "./tile-server/data"
+  $INPUT_FILE = "$TILE_SERVER_DATA_DIR/madagascar-latest.osm.pbf"
+  $OUTPUT_FILE = "$TILE_SERVER_DATA_DIR/madagascar.mbtiles"
   
-  if [ ! -f "$INPUT_FILE" ]; then
-    echo "❌ Erreur: Fichier $INPUT_FILE non trouvé"
+  if (-not (Test-Path $INPUT_FILE)) {
+    Write-Host "❌ Erreur: Fichier $INPUT_FILE non trouvé" -ForegroundColor Red
     exit 1
-  fi
+  }
   
-  echo "📊 Fichier d'entrée: $(du -h $INPUT_FILE | cut -f1)"
-  echo "⏳ Cela peut prendre 20-30 minutes..."
+  $inputSize = (Get-Item $INPUT_FILE).Length / 1MB
+  Write-Host "📊 Fichier d'entrée: $([math]::Round($inputSize, 2)) MB" -ForegroundColor Cyan
+  Write-Host "⏳ Cela peut prendre 20-30 minutes..." -ForegroundColor Yellow
   
   # Utiliser tilemaker avec les règles par défaut
-  tilemaker \
-    --input "$INPUT_FILE" \
-    --output "$OUTPUT_FILE" \
-    --threads $(nproc) \
-    --zoom 0-14
+  $threads = [Environment]::ProcessorCount
+  & tilemaker --input $INPUT_FILE --output $OUTPUT_FILE --threads $threads --zoom 0-14
   
-  echo "✅ Conversion terminée!"
-  echo "📊 Fichier MBTiles: $(du -h $OUTPUT_FILE | cut -f1)"
-  EOF
-  
-  chmod +x scripts/convert-map-data.sh
+  Write-Host "✅ Conversion terminée!" -ForegroundColor Green
+  $outputSize = (Get-Item $OUTPUT_FILE).Length / 1MB
+  Write-Host "📊 Fichier MBTiles: $([math]::Round($outputSize, 2)) MB" -ForegroundColor Cyan
+'@ | Out-File -FilePath "scripts/convert-map-data.ps1" -Encoding UTF8
   ```
 
 - [ ] Exécuter la conversion
-  ```bash
-  ./scripts/convert-map-data.sh
+  ```powershell
+  .\scripts\convert-map-data.ps1
   ```
   
 - [ ] ⏳ **Attention**: Cela peut prendre 20-30 minutes
   - **Pendant ce temps**: Préparez les tâches suivantes
 
 - [ ] Vérifier le fichier MBTiles
-  ```bash
-  ls -lh ./tile-server/data/*.mbtiles
+  ```powershell
+  Get-ChildItem ./tile-server/data/*.mbtiles | Format-Table Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB,2)}}
   ```
 
 ### Tâche 2.4: Alternative rapide (sans conversion)
 - [ ] **Option si vous manquez de temps**: Utiliser des tuiles pré-générées
-  ```bash
+  ```powershell
   # Créer un répertoire pour les styles
-  mkdir -p ./tile-server/styles
+  New-Item -ItemType Directory -Path "./tile-server/styles" -Force
   
   # Télécharger un style OSM basique
-  curl -o ./tile-server/styles/osm-bright.json \
-    https://raw.githubusercontent.com/openmaptiles/positron-gl-style/master/style.json
+  Invoke-WebRequest -Uri "https://raw.githubusercontent.com/openmaptiles/positron-gl-style/master/style.json" -OutFile "./tile-server/styles/osm-bright.json"
   ```
 
 ---
 
 ## ✅ PHASE 3: DÉMARRER LE SERVEUR DE CARTES (15-20 min)
 
-### Tâche 3.1: Démarrer le conteneur Tile Server
-- [ ] Lancer le serveur de cartes
+### Tâche 3.1: Démarrer les services avec Docker Compose
+- [ ] Lancer tous les services (PostgreSQL + Tile Server)
   ```bash
-  docker-compose up -d tile-server
+  docker-compose up -d
   ```
 
-- [ ] Vérifier que le conteneur est en cours d'exécution
+- [ ] Vérifier que les conteneurs sont en cours d'exécution
   ```bash
-  docker ps | grep tile-server
+  docker ps
   ```
-  - **Résultat attendu**: `tile-server    ...    Up X seconds`
+  - **Résultat attendu**: `postgres` et `tile-server` avec statut "Up"
 
-- [ ] Vérifier les logs
+- [ ] Vérifier les logs du tile-server
   ```bash
   docker logs tile-server
   ```
 
-### Tâche 3.2: Tester l'accès au serveur
+### Tâche 3.2: Tester l'accès au serveur de cartes
 - [ ] Accéder au serveur dans le navigateur
   ```
   URL: http://localhost:8081
   ```
-  - **Résultat attendu**: Page d'accueil de TileServer GL
+  - **Résultat attendu**: Page nginx pour le proxy de tuiles
 
-- [ ] Vérifier la liste des données disponibles
+- [ ] Tester l'accès aux tuiles OSM (via proxy nginx)
   ```
-  URL: http://localhost:8081/data
+  URL: http://localhost:8081/{z}/{x}/{y}.png
   ```
-  - **Résultat attendu**: Une liste JSON avec les fichiers MBTiles
+  - **Note**: Le tile-server actuel utilise nginx comme proxy vers OSM
 
-- [ ] Tester une tuile spécifique (zoom 0, x=0, y=0)
-  ```
-  URL: http://localhost:8081/data/madagascar/tiles/0/0/0.pbf
+- [ ] Vérifier la configuration nginx (optionnel)
+  ```bash
+  docker exec tile-server cat /etc/nginx/conf.d/default.conf
   ```
 
 ---
@@ -275,12 +276,12 @@ Module Cartes
 ### Tâche 4.1: Créer l'API de configuration des cartes
 - [ ] Créer le contrôleur `MapController.java`
   ```bash
-  # Chemin: identity-provider-backend/src/main/java/com/identity/api/controller/MapController.java
+  # Chemin: identity-provider-backend/src/main/java/com/identityprovider/controller/MapController.java
   ```
 
 - [ ] Contenu du contrôleur:
   ```java
-  package com.identity.api.controller;
+  package com.identityprovider.controller;
   
   import org.springframework.http.ResponseEntity;
   import org.springframework.web.bind.annotation.*;
@@ -294,7 +295,7 @@ Module Cartes
       
       /**
        * GET /api/maps/config
-       * Retourne la configuration de la carte pour Antananarivo
+       * Retourne la configuration de la carte pour le Signal EO
        */
       @GetMapping("/config")
       public ResponseEntity<?> getMapConfig() {
@@ -311,9 +312,9 @@ Module Cartes
           config.put("minZoom", 10);
           config.put("maxZoom", 18);
           
-          // Serveur de tuiles
+          // Serveur de tuiles (proxy nginx)
           config.put("tileServerUrl", "http://localhost:8081");
-          config.put("tileSourceId", "madagascar");
+          config.put("tilePattern", "http://localhost:8081/{z}/{x}/{y}.png");
           
           // Configuration Leaflet
           Map<String, Object> leaflet = new HashMap<>();
@@ -333,10 +334,11 @@ Module Cartes
           Map<String, Object> status = new HashMap<>();
           
           try {
-              // Vérifier la connexion au serveur de tuiles
-              String tileServerUrl = "http://localhost:8081/data";
+              // Vérifier la connexion au serveur de tuiles (nginx proxy)
+              String tileServerUrl = "http://localhost:8081";
               status.put("online", true);
               status.put("url", tileServerUrl);
+              status.put("type", "nginx-proxy");
               status.put("timestamp", System.currentTimeMillis());
           } catch (Exception e) {
               status.put("online", false);
@@ -370,8 +372,8 @@ Module Cartes
   ```
 
 - [ ] Tester l'endpoint de configuration
-  ```bash
-  curl http://localhost:8080/api/maps/config
+  ```powershell
+  Invoke-RestMethod -Uri "http://localhost:8080/api/maps/config" | ConvertTo-Json -Depth 5
   ```
   - **Résultat attendu**: 
     ```json
@@ -430,7 +432,7 @@ Module Cartes
           minZoom: 10,
           maxZoom: 18,
           tileServerUrl: 'http://localhost:8081',
-          tileSourceId: 'madagascar'
+          tilePattern: 'http://localhost:8081/{z}/{x}/{y}.png'
         };
       }
     },
@@ -498,7 +500,7 @@ Module Cartes
       return <div className="map-error">{error || 'Erreur de configuration'}</div>;
     }
 
-    const { center, defaultZoom, minZoom, maxZoom, tileServerUrl, tileSourceId } = mapConfig;
+    const { center, defaultZoom, minZoom, maxZoom, tileServerUrl, tilePattern } = mapConfig;
 
     return (
       <div className="map-container">
@@ -510,7 +512,7 @@ Module Cartes
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
-            url={`${tileServerUrl}/data/${tileSourceId}/tiles/{z}/{x}/{y}.png`}
+            url={tilePattern || `${tileServerUrl}/{z}/{x}/{y}.png`}
             attribution='© OpenStreetMap contributors'
             maxZoom={maxZoom}
           />
@@ -518,7 +520,7 @@ Module Cartes
           {/* Exemple de marqueur */}
           <Marker position={[center.latitude, center.longitude]}>
             <Popup>
-              Antananarivo<br />
+              Signal EO - Centre Antananarivo<br />
               Latitude: {center.latitude}<br />
               Longitude: {center.longitude}
             </Popup>
@@ -649,20 +651,20 @@ Module Cartes
   - [ ] Déplacer la carte dans les 4 directions
   - [ ] Vérifier que les tuiles se chargent correctement
 
-### Tâche 6.3: Test du serveur de tuiles
-- [ ] Accéder à l'interface du serveur
+### Tâche 6.3: Test du serveur de tuiles (nginx proxy)
+- [ ] Accéder au serveur nginx
   ```
   http://localhost:8081
   ```
 
-- [ ] Vérifier la liste des données
+- [ ] Tester une tuile directement
   ```
-  http://localhost:8081/data
+  http://localhost:8081/14/8415/5450.png
   ```
 
-- [ ] Télécharger une tuile de test
+- [ ] Vérifier les logs nginx
   ```bash
-  curl -o test_tile.pbf http://localhost:8081/data/madagascar/tiles/13/2048/1234.pbf
+  docker logs tile-server
   ```
 
 ### Tâche 6.4: Tests d'intégration
@@ -707,8 +709,8 @@ Module Cartes
 
 - [ ] **Docker**: PostgreSQL et Tile Server en cours d'exécution
 - [ ] **Données**: Fichier MBTiles présent dans `tile-server/data/`
-- [ ] **Backend**: Serveur de cartes API démarré sur le port 8080
-- [ ] **Serveur de tuiles**: TileServer GL accessible sur http://localhost:8081
+- [ ] **Backend**: API Spring Boot démarrée sur le port 8080 (Signal EO)
+- [ ] **Serveur de tuiles**: Proxy nginx accessible sur http://localhost:8081
 - [ ] **Frontend**: React avec MapComponent fonctionnelle sur http://localhost:3000
 - [ ] **Tests**: Tous les tests de connectivité réussis
 - [ ] **Documentation**: Mise à jour complète
@@ -742,12 +744,12 @@ docker-compose restart postgres
 ```
 
 ### Nettoyer
-```bash
+```powershell
 # Arrêter tous les conteneurs
 docker-compose down
 
 # Supprimer les données
-rm -rf ./tile-server/data/*
+Remove-Item -Path "./tile-server/data/*" -Force -Recurse
 
 # Redémarrer complètement
 docker-compose up -d
@@ -762,13 +764,19 @@ docker-compose up -d
 2. **Stockage disque**: Assurez-vous d'avoir au moins 5GB d'espace libre.
 
 3. **Ports utilisés**:
-   - Backend: `8080`
-   - Tile Server: `8081`
-   - Frontend: `3000`
+   - Backend Spring Boot: `8080`
+   - Tile Server (nginx proxy): `8081`  
+   - Frontend React: `3000`
+   - PostgreSQL: `5433` (mappé vers 5432 dans le conteneur)
 
-4. **Architecture**: Le module fonctionne avec le Docker Compose existant. Pas besoin de configuration supplémentaire.
+4. **Architecture Signal EO**: Le module s'intègre avec:
+   - identity-provider-backend (Spring Boot)
+   - identity-provider-web (React)
+   - Docker Compose pour PostgreSQL et tile server
 
-5. **Performance**: Les premières fois que vous zoomez/naviguez, le chargement peut être plus lent (les tuiles se cachent).
+5. **Performance**: Le tile server nginx proxy accède directement aux tuiles OSM. Performance stable.
+
+6. **Compatibilité Windows**: Tous les scripts sont adaptés pour PowerShell. Politique d'exécution: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` si nécessaire.
 
 ---
 
@@ -777,8 +785,8 @@ docker-compose up -d
 Si vous avez des problèmes:
 
 1. Vérifiez que tous les prérequis sont installés
-2. Consultez les logs (`docker logs`)
-3. Vérifiez la connectivité avec `curl`
+2. Consultez les logs (`docker logs`)  
+3. Vérifiez la connectivité avec PowerShell (`Invoke-RestMethod`, `Invoke-WebRequest`)
 4. Consultez le guide de dépannage
 
 ---

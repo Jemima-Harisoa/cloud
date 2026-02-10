@@ -33,7 +33,10 @@ services:
     ports:
       - "8081:80"
     volumes:
+      # config nginx (proxy vers OSM en ligne)
       - ./nginx-tiles.conf:/etc/nginx/conf.d/default.conf
+      # style JSON local
+      - ./tile-server/styles:/styles
     networks:
       - identity-network
     depends_on:

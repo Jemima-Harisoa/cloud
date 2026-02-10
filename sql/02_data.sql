@@ -12,14 +12,14 @@ TRUNCATE TABLE road_issues, sessions, users RESTART IDENTITY CASCADE;
 -- Format: $2a$10$... (BCrypt avec 10 rounds)
 
 -- Mot de passe pour tous: "Password123!"
--- Hash BCrypt: $2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0
+-- Hash BCrypt: $2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK
 
 INSERT INTO users (email, password, first_name, last_name, phone_number, role, is_active, is_blocked, failed_login_attempts, created_at, updated_at, last_login)
 VALUES
 -- Manager (gestionnaire des travaux)
 (
   'manager@roadworks.mg',
-  '$2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0', -- Password123!
+  '$2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK', -- Password123!
   'Rakoto',
   'ANDRIANASOLO',
   '+261 34 12 345 67',
@@ -35,7 +35,7 @@ VALUES
 -- Utilisateur actif (signale régulièrement des problèmes)
 (
   'jean.rasoa@gmail.com',
-  '$2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0', -- Password123!
+  '$2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK', -- Password123!
   'Jean',
   'RASOA',
   '+261 32 11 222 33',
@@ -51,7 +51,7 @@ VALUES
 -- Utilisateur récent
 (
   'marie.ravelo@yahoo.fr',
-  '$2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0', -- Password123!
+  '$2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK', -- Password123!
   'Marie',
   'RAVELO',
   '+261 33 44 555 66',
@@ -67,7 +67,7 @@ VALUES
 -- Visiteur (compte de base)
 (
   'visitor.test@example.com',
-  '$2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0', -- Password123!
+  '$2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK', -- Password123!
   'Test',
   'VISITOR',
   '+261 34 99 888 77',
@@ -83,7 +83,7 @@ VALUES
 -- Utilisateur bloqué (trop de tentatives échouées)
 (
   'blocked.user@test.mg',
-  '$2a$10$XQjZ0ZQ3Z9Z0Z0Z0Z0Z0ZeJ0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0Z0', -- Password123!
+  '$2a$10$iayay4dxDl20Ew3rYZetP.rHyLbs6veopw1lpc0w2wDYeDMTLADqK', -- Password123!
   'Blocked',
   'USER',
   '+261 32 77 666 55',
