@@ -31,3 +31,5 @@ build/
 # Ignorer la version react native
 identity-provider-mobile-react/**
 identity-provider-mobile/**
+identity-provider-mobile-vue/android/**
+
