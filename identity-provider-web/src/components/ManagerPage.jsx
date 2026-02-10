@@ -356,12 +356,19 @@ function ManagerPage() {
                                                     {u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : 'Jamais'}
                                                 </td>
                                                 <td>
-                                                    {u.isBlocked && (
+                                                    {u.isBlocked ? (
                                                         <button 
                                                             className="btn-unblock"
                                                             onClick={() => handleUnblockUser(u.id)}
                                                         >
                                                             Débloquer
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            className="btn-block"
+                                                            onClick={() => handleBlockUser(u.id)}
+                                                        >
+                                                            Bloquer
                                                         </button>
                                                     )}
                                                 </td>
