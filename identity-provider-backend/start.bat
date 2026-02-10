@@ -15,7 +15,7 @@ echo 3. Lancer l'application
 echo.
 echo Appuyez sur CTRL+C pour arreter
 echo ========================================
-mvn spring-boot:run -Dspring-boot.run.profiles=local
+call mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 
 echo.
 echo ========================================

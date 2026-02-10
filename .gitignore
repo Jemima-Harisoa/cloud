@@ -19,3 +19,5 @@ Thumbs.db
 cypress/screenshots/
 cypress/videos/
 
+# Firebase
+**/firebase-service-account.json

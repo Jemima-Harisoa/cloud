@@ -29,6 +29,9 @@ public class RoadIssueService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private FirebaseSyncService firebaseSyncService;
+
     @PostConstruct
     public void migrateData() {
         try {
@@ -97,6 +100,14 @@ public class RoadIssueService {
         issue.setReporter(reporter);
 
         RoadIssue savedIssue = roadIssueRepository.save(issue);
+        
+        // Sync to Firebase
+        try {
+            firebaseSyncService.syncRoadIssueToFirebase(savedIssue);
+        } catch (Exception e) {
+            System.err.println("Failed to sync to Firebase: " + e.getMessage());
+        }
+        
         return convertToResponse(savedIssue);
     }
 
@@ -133,6 +144,14 @@ public class RoadIssueService {
             issue.setPhotoUrl(request.getPhotoUrl());
 
         RoadIssue updatedIssue = roadIssueRepository.save(issue);
+        
+        // Sync to Firebase
+        try {
+            firebaseSyncService.syncRoadIssueToFirebase(updatedIssue);
+        } catch (Exception e) {
+            System.err.println("Failed to sync to Firebase: " + e.getMessage());
+        }
+        
         return convertToResponse(updatedIssue);
     }
 
@@ -150,6 +169,13 @@ public class RoadIssueService {
         }
 
         roadIssueRepository.deleteById(id);
+        
+        // Delete from Firebase
+        try {
+            firebaseSyncService.deleteRoadIssueFromFirebase(id);
+        } catch (Exception e) {
+            System.err.println("Failed to delete from Firebase: " + e.getMessage());
+        }
     }
 
     @Transactional
@@ -167,6 +193,13 @@ public class RoadIssueService {
                 throw new RuntimeException("Vous n'avez pas l'autorisation de supprimer le signalement " + id);
             }
             roadIssueRepository.deleteById(id);
+            
+            // Delete from Firebase
+            try {
+                firebaseSyncService.deleteRoadIssueFromFirebase(id);
+            } catch (Exception e) {
+                System.err.println("Failed to delete from Firebase: " + e.getMessage());
+            }
         }
     }
 
@@ -180,7 +213,14 @@ public class RoadIssueService {
             RoadIssue issue = roadIssueRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Signalement " + id + " non trouvé"));
             issue.setStatus(status);
-            roadIssueRepository.save(issue);
+            RoadIssue savedIssue = roadIssueRepository.save(issue);
+            
+            // Sync to Firebase
+            try {
+                firebaseSyncService.syncRoadIssueToFirebase(savedIssue);
+            } catch (Exception e) {
+                System.err.println("Failed to sync to Firebase: " + e.getMessage());
+            }
         }
     }
 

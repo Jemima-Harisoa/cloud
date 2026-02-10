@@ -34,6 +34,10 @@ import '@ionic/vue/css/palettes/dark.system.css';
 /* Theme variables */
 import './theme/variables.css';
 
+// Debug: Expose Firebase db to window
+import { db } from './config/firebase';
+(window as any).db = db;
+
 const app = createApp(App)
   .use(IonicVue)
   .use(router);
