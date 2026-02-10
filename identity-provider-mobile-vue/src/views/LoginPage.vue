@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Connexion DEBUG</ion-title>
+        <ion-title>Connexion</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -100,15 +100,7 @@ const error = ref('');
 const loading = ref(false);
 
 onMounted(async () => {
-  // DEBUG: Show current API URL using Toast
-  const toast = await toastController.create({
-    message: 'DEBUG: API URL = ' + apiClient.defaults.baseURL,
-    duration: 5000,
-    position: 'middle',
-    color: 'tertiary',
-    cssClass: 'debug-toast'
-  });
-  await toast.present();
+  // Debug mode: could add check here if needed later
 });
 
 const handleLogin = async (event?: Event) => {

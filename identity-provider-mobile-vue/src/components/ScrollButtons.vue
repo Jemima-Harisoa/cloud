@@ -1,5 +1,5 @@
 <template>
-  <div class="scroll-buttons">
+  <div class="scroll-buttons" v-if="isVisible">
     <ion-fab vertical="bottom" horizontal="end" slot="fixed">
       <ion-fab-button @click="scrollToTop" size="small" class="scroll-btn top-btn">
         <ion-icon :icon="chevronUpOutline"></ion-icon>
@@ -14,6 +14,11 @@
 <script setup lang="ts">
 import { IonFab, IonFabButton, IonIcon } from '@ionic/vue';
 import { chevronUpOutline, chevronDownOutline } from 'ionicons/icons';
+import { useRoute } from 'vue-router';
+import { computed } from 'vue';
+
+const route = useRoute();
+const isVisible = computed(() => route.path !== '/login');
 
 const scrollToTop = () => {
   const content = document.querySelector('ion-content');
