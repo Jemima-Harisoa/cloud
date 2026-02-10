@@ -52,6 +52,7 @@ import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, 
   IonInput, IonButton, IonItem, IonText, toastController 
 } from '@ionic/vue';
+import { getErrorMessage } from '@/services/client';
 import authService from '@/services/authService';
 
 const router = useRouter();
@@ -94,7 +95,7 @@ const handleRegister = async () => {
     window.location.href = '/map';
   } catch (err: any) {
     console.error(err);
-    error.value = err.response?.data?.message || "Erreur lors de l'inscription";
+    error.value = getErrorMessage(err);
   } finally {
     loading.value = false;
   }
@@ -109,10 +110,10 @@ const goToLogin = () => {
 .register-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  min-height: 100%;
   max-width: 400px;
   margin: 0 auto;
-  padding-top: 20px;
+  padding: 20px 0;
   text-align: center;
 }
 </style>

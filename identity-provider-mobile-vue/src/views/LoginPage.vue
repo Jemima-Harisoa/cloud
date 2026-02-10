@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Connexion</ion-title>
+        <ion-title>Connexion DEBUG</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { 
   IonPage, 
@@ -90,6 +90,7 @@ import {
   toastController,
   alertController
 } from '@ionic/vue';
+import apiClient, { getErrorMessage } from '@/services/client';
 import authService from '@/services/authService';
 
 const router = useRouter();
@@ -97,6 +98,18 @@ const email = ref('');
 const password = ref('');
 const error = ref('');
 const loading = ref(false);
+
+onMounted(async () => {
+  // DEBUG: Show current API URL using Toast
+  const toast = await toastController.create({
+    message: 'DEBUG: API URL = ' + apiClient.defaults.baseURL,
+    duration: 5000,
+    position: 'middle',
+    color: 'tertiary',
+    cssClass: 'debug-toast'
+  });
+  await toast.present();
+});
 
 const handleLogin = async (event?: Event) => {
   // Prevent any form submission or page refresh
@@ -139,10 +152,18 @@ const handleLogin = async (event?: Event) => {
     console.log('Error response data:', err.response?.data);
     console.log('Error message:', err.response?.data?.message);
     
-    const errorMessage = err.response?.data?.message || err.message || 'Identifiants incorrects ou erreur serveur';
+    // Extract the most detailed message from backend
+    error.value = getErrorMessage(err);
     
-    // Show error only as inline text below password field
-    error.value = errorMessage;
+    // Also show toast for visibility
+    const toast = await toastController.create({
+      message: error.value,
+      duration: 5000,
+      color: 'danger',
+      position: 'bottom'
+    });
+    await toast.present();
+    
     loading.value = false;
   } finally {
     // Loading state is managed in catch block
@@ -165,10 +186,10 @@ const continueAsVisitor = () => {
 .login-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  height: 100%;
+  min-height: 100%;
   max-width: 400px;
   margin: 0 auto;
+  padding: 40px 20px;
   text-align: center;
 }
 

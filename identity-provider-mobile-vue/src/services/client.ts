@@ -1,14 +1,39 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.8.100:8080/api';
+// HARDCODED for debugging - bypass env vars completely
+const API_BASE_URL = 'https://gnashingly-superadmirable-anahi.ngrok-free.dev/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   },
-  withCredentials: true,
+  withCredentials: false,
 });
+
+/**
+ * Extracts a readable error message from an axios error
+ */
+export const getErrorMessage = (err: any): string => {
+  if (err.response?.data) {
+    const data = err.response.data;
+
+    // 1. Check for 'message' field (AuthException, UserBlockedException)
+    if (data.message) return data.message;
+
+    // 2. Check for validation errors (MethodArgumentNotValidException)
+    if (typeof data === 'object') {
+      const values = Object.values(data);
+      if (values.length > 0 && typeof values[0] === 'string') {
+        return values[0];
+      }
+    }
+  }
+
+  return err.message || "Une erreur s'est produite";
+};
 
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');

@@ -2,7 +2,9 @@
 # CONFIGURATION GLOBALE
 # ========================================
 server:
-  port: 8081
+  port: 8443
+  ssl:
+    enabled: false
   error:
     include-stacktrace: always
     include-message: always
@@ -68,6 +70,8 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: backend-debug.log
 
 # ========================================
 # CONFIGURATION APPLICATION
@@ -175,6 +179,10 @@ spring:
 app:
   database:
     type: postgres
+
+server:
+  ssl:
+    enabled: false
 
 # ========================================
 # PROFIL: TEST

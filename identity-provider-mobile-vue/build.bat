@@ -12,10 +12,15 @@ echo 2. Verification Java
 java -version
 echo.
 
-echo 3. Aller au projet Android
+echo 3. Construction et Synchro
+cd /d "D:\Rattrapage\S5\Mr_Rojo\cloud\identity-provider-mobile-vue"
+call npm run build
+call npx cap sync android
+
+echo 4. Aller au projet Android
 cd /d "D:\Rattrapage\S5\Mr_Rojo\cloud\identity-provider-mobile-vue\android"
 
-echo 4. Nettoyer le build precedent
+echo 5. Nettoyer le build precedent
 call gradlew clean
 
 echo 5. Construire l'APK Debug

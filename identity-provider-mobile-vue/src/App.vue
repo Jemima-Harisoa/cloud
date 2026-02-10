@@ -1,11 +1,13 @@
 <template>
   <ion-app>
     <ion-router-outlet />
+    <ScrollButtons />
   </ion-app>
 </template>
 
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
+import ScrollButtons from '@/components/ScrollButtons.vue';
 </script>
 
 <style>

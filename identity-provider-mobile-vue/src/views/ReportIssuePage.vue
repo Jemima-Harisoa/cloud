@@ -133,16 +133,24 @@ const success = ref(false);
 
 const getLocation = async () => {
   try {
-    const coordinates = await Geolocation.getCurrentPosition();
+    const permissions = await Geolocation.checkPermissions();
+    if (permissions.location !== 'granted') {
+      const request = await Geolocation.requestPermissions();
+      if (request.location !== 'granted') {
+        error.value = "Permission de localisation refusée.";
+        return;
+      }
+    }
+    
+    const coordinates = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 10000
+    });
     formData.latitude = coordinates.coords.latitude;
     formData.longitude = coordinates.coords.longitude;
   } catch (err: any) {
-    console.error(err);
-    if (err.code === 1) { // 1 = PERMISSION_DENIED
-      error.value = "La géolocalisation est bloquée par votre navigateur. Veuillez l'autoriser dans les réglages du site (en haut à gauche de la barre d'adresse).";
-    } else {
-      error.value = "Impossible d'obtenir la localisation";
-    }
+    console.error('Location error:', err);
+    error.value = "Impossible d'obtenir la localisation. Vérifiez que votre GPS est activé.";
   }
 };
 
@@ -176,6 +184,7 @@ const goBack = () => {
 .report-form {
   max-width: 600px;
   margin: 0 auto;
+  padding-bottom: 50px;
 }
 .location-section {
   text-align: center;

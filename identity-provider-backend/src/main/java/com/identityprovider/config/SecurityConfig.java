@@ -59,23 +59,31 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Charger les origins depuis la config
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        configuration.setAllowedOrigins(origins);
+        // Allow all origins for development
+        configuration.addAllowedOriginPattern("*");
         
-        // Charger les méthodes depuis la config
-        List<String> methods = Arrays.asList(allowedMethods.split(","));
-        configuration.setAllowedMethods(methods);
+        // Methods
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         
-        // Headers
-        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+        // Explicitly allow important headers
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Origin", 
+            "Content-Type", 
+            "Accept", 
+            "Authorization", 
+            "x-requested-with", 
+            "ngrok-skip-browser-warning", 
+            "Access-Control-Request-Method", 
+            "Access-Control-Request-Headers"
+        ));
         
-        // Credentials et MaxAge
-        configuration.setAllowCredentials(allowCredentials);
-        configuration.setMaxAge(maxAge);
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
