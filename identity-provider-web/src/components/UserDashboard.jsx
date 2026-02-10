@@ -6,6 +6,8 @@ import '../styles/UserDashboard.css';
 
 function UserDashboard() {
     const [user, setUser] = useState(null);
+    const [activeTab, setActiveTab] = useState('all');
+    const [stats, setStats] = useState(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -14,44 +16,140 @@ function UserDashboard() {
         }
     }, []);
 
+    useEffect(() => {
+        if (activeTab === 'stats') {
+            loadStatistics();
+        }
+    }, [activeTab]);
+
+    const loadStatistics = async () => {
+        if (!user?.id) return;
+        
+        try {
+            // Charger uniquement les signalements de l'utilisateur
+            const response = await fetch(`http://localhost:8080/api/road-issues?reporterId=${user.id}`);
+            if (response.ok) {
+                const userIssues = await response.json();
+                
+                // Calculer les statistiques personnelles
+                const totalIssues = userIssues.length;
+                const completedIssues = userIssues.filter(issue => issue.status === 'TERMINE').length;
+                const totalSurface = userIssues.reduce((sum, issue) => sum + (issue.surfaceM2 || 0), 0);
+                const totalBudget = userIssues.reduce((sum, issue) => sum + (issue.budget || 0), 0);
+                
+                setStats({
+                    totalIssues,
+                    completedIssues,
+                    totalSurface,
+                    totalBudget
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des statistiques:', error);
+        }
+    };
+
     return (
         <div className="user-dashboard">
             <Header user={user} showLogout={true} />
 
             <div className="user-content">
-                <section className="user-features">
-                    <h2>Mes Fonctionnalités</h2>
-                    <div className="features-grid">
-                        <div className="feature-card">
-                            <h3>🗺️ Voir la Carte</h3>
-                            <p>Consultez tous les travaux routiers en cours à Antananarivo</p>
-                        </div>
-                        <div className="feature-card">
-                            <h3>📍 Mes Signalements</h3>
-                            <p>Filtrez et suivez uniquement vos propres signalements</p>
-                        </div>
-                        <div className="feature-card">
-                            <h3>📊 Statistiques</h3>
-                            <p>Consultez le nombre de points, surface et avancement</p>
-                        </div>
-                        <div className="feature-card">
-                            <h3>✏️ Modifier Profil</h3>
-                            <p>Mettez à jour vos informations personnelles</p>
-                        </div>
-                    </div>
-                </section>
+                <div className="user-tabs">
+                    <button 
+                        className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('all')}
+                    >
+                        🗺️ Tous les Signalements
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'my' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('my')}
+                    >
+                        📍 Mes Signalements
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('stats')}
+                    >
+                        📊 Statistiques
+                    </button>
+                </div>
 
-                <section className="map-section">
-                    <h2>🗺️ Carte Interactive</h2>
-                    <p className="map-instructions">
-                        Cliquez sur un point pour voir les détails: 
-                        date, statut, surface (m²), budget et entreprise concernée
-                    </p>
-                    <RoadWorkMap 
-                        userRole="user" 
-                        userId={user?.id}
-                    />
-                </section>
+                {/* TAB 1: TOUS LES SIGNALEMENTS */}
+                {activeTab === 'all' && (
+                    <section className="map-section">
+                        <h2>🗺️ Carte des Travaux Routiers</h2>
+                        <div className="map-instructions">
+                            <p>Consultez tous les travaux routiers en cours à Antananarivo</p>
+                            <p className="info-text">
+                                <strong>Cliquez sur un point</strong> pour voir les détails du signalement
+                            </p>
+                        </div>
+                        <RoadWorkMap 
+                            userRole="user" 
+                            userId={user?.id}
+                        />
+                    </section>
+                )}
+
+                {/* TAB 2: MES SIGNALEMENTS */}
+                {activeTab === 'my' && (
+                    <section className="map-section">
+                        <h2>📍 Mes Signalements</h2>
+                        <div className="map-instructions">
+                            <p>Filtrez et suivez uniquement vos propres signalements</p>
+                            <p className="info-text">
+                                Seuls vos signalements sont affichés sur la carte
+                            </p>
+                        </div>
+                        <RoadWorkMap 
+                            userRole="user" 
+                            userId={user?.id}
+                            showMyIssuesOnly={true}
+                        />
+                    </section>
+                )}
+
+                {/* TAB 3: STATISTIQUES */}
+                {activeTab === 'stats' && (
+                    <section className="stats-section">
+                        <h2>📊 Statistiques des Signalements</h2>
+                        <p className="stats-description">
+                            Vue d'ensemble des travaux routiers à Antananarivo
+                        </p>
+
+                        {!stats ? (
+                            <div className="loading">Chargement des statistiques...</div>
+                        ) : (
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-icon">📍</div>
+                                    <div className="stat-value">{stats.totalIssues || 0}</div>
+                                    <div className="stat-label">Signalements Total</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon">✅</div>
+                                    <div className="stat-value">{stats.completedIssues || 0}</div>
+                                    <div className="stat-label">Travaux Terminés</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon">📐</div>
+                                    <div className="stat-value">
+                                        {stats.totalSurface ? stats.totalSurface.toFixed(2) : 0} m²
+                                    </div>
+                                    <div className="stat-label">Surface Totale</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-icon">💰</div>
+                                    <div className="stat-value">
+                                        {stats.totalBudget ? (stats.totalBudget / 1000000).toFixed(2) + 'M' : 0} Ar
+                                    </div>
+                                    <div className="stat-label">Budget Total</div>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                )}
             </div>
         </div>
     );

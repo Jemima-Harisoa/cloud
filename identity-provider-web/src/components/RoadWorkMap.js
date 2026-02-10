@@ -28,7 +28,7 @@ const getMarkerIcon = (status) => {
     });
 };
 
-function RoadWorkMap({ userRole = 'visitor', userId = null }) {
+function RoadWorkMap({ userRole = 'visitor', userId = null, showMyIssuesOnly: propShowMyIssuesOnly = null }) {
     const [issues, setIssues] = useState([]);
     const [stats, setStats] = useState(null);
     const [selectedIssue, setSelectedIssue] = useState(null);
@@ -44,16 +44,19 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
 
     const center = [-18.8792, 47.5079]; // Antananarivo
 
+    // Use prop value if provided, otherwise use state
+    const effectiveShowMyIssuesOnly = propShowMyIssuesOnly !== null ? propShowMyIssuesOnly : showMyIssuesOnly;
+
     useEffect(() => {
         loadIssues();
         loadStats();
-    }, [showMyIssuesOnly, userId]);
+    }, [effectiveShowMyIssuesOnly, userId]);
 
     const loadIssues = async () => {
         try {
             setLoading(true);
             let url = '/road-issues';
-            if (showMyIssuesOnly && userId) {
+            if (effectiveShowMyIssuesOnly && userId) {
                 url += `?reporterId=${userId}`;
             }
             const response = await api.get(url);
@@ -186,8 +189,8 @@ function RoadWorkMap({ userRole = 'visitor', userId = null }) {
                         </div>
                     </div>
 
-                    {/* Filter for users */}
-                    {userRole === 'user' && (
+                    {/* Filter for users - only show if not controlled by parent */}
+                    {userRole === 'user' && propShowMyIssuesOnly === null && (
                         <div style={{ marginBottom: '1rem' }}>
                             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                                 <input

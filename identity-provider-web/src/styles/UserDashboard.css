@@ -86,6 +86,36 @@
     width: 100%;
 }
 
+/* TABS NAVIGATION */
+.user-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.tab-btn {
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    color: #6b7280;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.tab-btn.active {
+    color: #10b981;
+    border-bottom-color: #10b981;
+}
+
 .user-features {
     margin-bottom: 48px;
 }
@@ -132,6 +162,7 @@
     font-size: 15px;
 }
 
+/* MAP SECTION */
 .map-section {
     background: #ffffff;
     border-radius: 12px;
@@ -144,7 +175,7 @@
     color: #1f2937;
     font-size: 26px;
     margin-top: 0;
-    margin-bottom: 8px;
+    margin-bottom: 16px;
     font-weight: 700;
 }
 
@@ -156,6 +187,83 @@
     border-radius: 8px;
     margin-bottom: 24px;
     font-size: 15px;
+}
+
+.map-instructions p {
+    margin: 8px 0;
+}
+
+.info-text {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* STATISTICS SECTION */
+.stats-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.stats-section h2 {
+    color: #1f2937;
+    font-size: 26px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.stats-description {
+    color: #6b7280;
+    margin-bottom: 32px;
+    font-size: 15px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    padding: 32px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #d1fae5;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.1);
+}
+
+.stat-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.stat-value {
+    color: #10b981;
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+    font-size: 16px;
 }
 
 @media (max-width: 768px) {
@@ -172,7 +280,22 @@
         font-size: 24px;
     }
 
+    .user-tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-width: 150px;
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+
     .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
         grid-template-columns: 1fr;
     }
 
@@ -180,7 +303,12 @@
         padding: 16px;
     }
 
-    .map-section {
+    .map-section,
+    .stats-section {
         padding: 16px;
+    }
+
+    .stat-value {
+        font-size: 28px;
     }
 }
