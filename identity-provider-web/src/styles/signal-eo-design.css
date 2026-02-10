@@ -78,6 +78,13 @@ html, body {
     box-shadow: var(--shadow-md);
 }
 
+.signal-eo-logo-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: white;
+    stroke-width: 2.5;
+}
+
 .signal-eo-brand-text {
     background: linear-gradient(90deg, var(--primary-green) 0%, var(--primary-pink) 100%);
     -webkit-background-clip: text;
