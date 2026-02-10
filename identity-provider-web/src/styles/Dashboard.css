@@ -262,6 +262,12 @@
   background-color: #5568d3;
 }
 
+.btn-primary:focus {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-secondary {
   background-color: #666;
   color: white;
@@ -271,6 +277,12 @@
   background-color: #555;
 }
 
+.btn-secondary:focus {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-success {
   background-color: #2ecc71;
   color: white;
@@ -278,6 +290,12 @@
 
 .btn-success:hover {
   background-color: #27ae60;
+}
+
+.btn-success:focus {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .loading {

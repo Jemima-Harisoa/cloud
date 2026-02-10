@@ -236,6 +236,12 @@ a:hover {
     box-shadow: var(--shadow-lg);
 }
 
+.btn-primary:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-secondary {
     background: var(--bg);
     color: var(--primary);
@@ -244,6 +250,13 @@ a:hover {
 
 .btn-secondary:hover:not(:disabled) {
     background: rgba(16, 185, 129, 0.05);
+}
+
+.btn-secondary:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    border-color: rgb(16, 185, 129);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-outline {
@@ -257,6 +270,13 @@ a:hover {
     border-color: var(--primary);
 }
 
+.btn-outline:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    border-color: rgb(16, 185, 129);
+    background: rgba(16, 185, 129, 0.05);
+}
+
 .btn-danger {
     background: var(--danger);
     color: white;
@@ -265,6 +285,12 @@ a:hover {
 .btn-danger:hover:not(:disabled) {
     background: #dc2626;
     transform: translateY(-2px);
+}
+
+.btn-danger:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-success {
@@ -277,6 +303,12 @@ a:hover {
     transform: translateY(-2px);
 }
 
+.btn-success:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-warning {
     background: var(--warning);
     color: white;
@@ -284,6 +316,12 @@ a:hover {
 
 .btn-warning:hover:not(:disabled) {
     background: #d97706;
+}
+
+.btn-warning:focus:not(:disabled) {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 /* Cards */
@@ -484,6 +522,13 @@ a:hover {
 .nav-link:hover,
 .nav-link.active {
     color: var(--primary);
+}
+
+.nav-link:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    border-radius: 4px;
+    color: rgb(16, 185, 129);
 }
 
 /* Hero Section */

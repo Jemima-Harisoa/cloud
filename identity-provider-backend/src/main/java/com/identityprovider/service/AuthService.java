@@ -148,8 +148,23 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void blockUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
+
+        user.setIsBlocked(true);
+        userRepository.save(user);
+    }
+
     public java.util.List<UserResponse> getBlockedUsers() {
         return userRepository.findByIsBlocked(true).stream()
+                .map(this::mapToUserResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
                 .map(this::mapToUserResponse)
                 .collect(java.util.stream.Collectors.toList());
     }

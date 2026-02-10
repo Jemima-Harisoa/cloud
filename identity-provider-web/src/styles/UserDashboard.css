@@ -67,15 +67,29 @@
     box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
 }
 
+.btn-profile:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-logout {
-    background: #ef4444;
+    background: rgb(16, 185, 129);
     color: white;
-    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+    transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-    background: #dc2626;
+    background: rgb(5, 150, 105);
     transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-logout:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .user-content {
@@ -116,6 +130,13 @@
 }
 
 .tab-btn:hover {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.tab-btn:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
     color: #10b981;
     background: rgba(16, 185, 129, 0.05);
 }

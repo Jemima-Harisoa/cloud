@@ -64,10 +64,24 @@ public class AuthController {
         return ResponseEntity.ok("Utilisateur débloqué avec succès");
     }
 
+    @PostMapping("/block/{userId}")
+    @Operation(summary = "Bloquer un utilisateur", description = "Bloque l'accès pour un utilisateur donné")
+    public ResponseEntity<String> blockUser(@PathVariable Long userId) {
+        authService.blockUser(userId);
+        return ResponseEntity.ok("Utilisateur bloqué avec succès");
+    }
+
     @GetMapping("/blocked-users")
     @Operation(summary = "Récupérer tous les utilisateurs bloqués")
     public ResponseEntity<java.util.List<UserResponse>> getBlockedUsers() {
         java.util.List<UserResponse> blockedUsers = authService.getBlockedUsers();
         return ResponseEntity.ok(blockedUsers);
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Récupérer tous les utilisateurs")
+    public ResponseEntity<java.util.List<UserResponse>> getAllUsers() {
+        java.util.List<UserResponse> users = authService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 }

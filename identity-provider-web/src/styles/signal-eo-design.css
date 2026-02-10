@@ -133,6 +133,12 @@ html, body {
     box-shadow: var(--shadow-lg);
 }
 
+.btn-primary:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .btn-secondary {
     background: var(--bg-gray);
     color: var(--text-black);
@@ -142,6 +148,13 @@ html, body {
 .btn-secondary:hover {
     background: var(--primary-pink);
     color: white;
+}
+
+.btn-secondary:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    border-color: rgb(16, 185, 129);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 .btn-outline {
@@ -155,13 +168,29 @@ html, body {
     background: rgba(236, 72, 153, 0.05);
 }
 
+.btn-outline:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    border-color: rgb(16, 185, 129);
+    background: rgba(16, 185, 129, 0.05);
+}
+
 .btn-logout {
-    background: #ff6b6b;
+    background: rgb(16, 185, 129);
     color: white;
+    transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-    background: #ff5252;
+    background: rgb(5, 150, 105);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-logout:focus {
+    outline: 2px solid rgb(16, 185, 129);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 /* ========== CARDS ========== */

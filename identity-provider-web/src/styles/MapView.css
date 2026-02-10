@@ -74,6 +74,13 @@
   background-color: #f0f2ff;
 }
 
+.filter-btn:focus {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+  border-color: rgb(16, 185, 129);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
 .filter-btn.active {
   background-color: #667eea;
   color: white;
