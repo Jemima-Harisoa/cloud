@@ -84,4 +84,18 @@ public class AuthController {
         java.util.List<UserResponse> users = authService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    @GetMapping("/pending-users")
+    @Operation(summary = "Récupérer les utilisateurs en attente de validation")
+    public ResponseEntity<java.util.List<UserResponse>> getPendingUsers() {
+        java.util.List<UserResponse> pendingUsers = authService.getPendingUsers();
+        return ResponseEntity.ok(pendingUsers);
+    }
+
+    @PostMapping("/activate/{userId}")
+    @Operation(summary = "Activer un utilisateur", description = "Valide l'inscription d'un utilisateur")
+    public ResponseEntity<String> activateUser(@PathVariable Long userId) {
+        authService.activateUser(userId);
+        return ResponseEntity.ok("Utilisateur activé avec succès");
+    }
 }

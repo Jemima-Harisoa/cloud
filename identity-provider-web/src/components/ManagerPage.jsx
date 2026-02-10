@@ -8,6 +8,7 @@ function ManagerPage() {
     const [user, setUser] = useState(null);
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [pendingUsers, setPendingUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('map');
     const [filterBlocked, setFilterBlocked] = useState('all'); // 'all', 'blocked', 'not-blocked'
@@ -20,6 +21,7 @@ function ManagerPage() {
         }
         loadBlockedUsers();
         loadAllUsers();
+        loadPendingUsers();
     }, []);
 
     const loadBlockedUsers = async () => {
@@ -54,6 +56,24 @@ function ManagerPage() {
             }
         } catch (error) {
             console.error('Erreur lors du chargement des utilisateurs:', error);
+        }
+        setLoading(false);
+    };
+
+    const loadPendingUsers = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/auth/pending-users', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setPendingUsers(data);
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement des demandes en attente:', error);
         }
         setLoading(false);
     };
@@ -104,6 +124,29 @@ function ManagerPage() {
         }
     };
 
+    const handleActivateUser = async (userId) => {
+        if (window.confirm('Êtes-vous sûr de vouloir valider cette inscription?')) {
+            try {
+                const response = await fetch(`/api/auth/activate/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                if (response.ok) {
+                    alert('Utilisateur activé avec succès!');
+                    loadPendingUsers();
+                    loadAllUsers();
+                } else {
+                    alert('Erreur lors de l\'activation');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de l\'activation');
+            }
+        }
+    };
+
     // Filtrer les utilisateurs selon les filtres sélectionnés
     const getFilteredUsers = () => {
         return allUsers.filter(u => {
@@ -142,6 +185,15 @@ function ManagerPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         Utilisateurs Bloqués
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('pending')}
+                    >
+                        <svg className="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Demandes de Validation
                     </button>
                     <button 
                         className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
@@ -235,7 +287,69 @@ function ManagerPage() {
                     </section>
                 )}
 
-                {/* TAB 3: LISTE DES UTILISATEURS */}
+                {/* TAB 3: DEMANDES DE VALIDATION */}
+                {activeTab === 'pending' && (
+                    <section className="pending-users-section">
+                        <h2>Demandes de Validation</h2>
+                        <p className="pending-description">
+                            Validez les nouvelles inscriptions pour activer les comptes utilisateurs
+                        </p>
+
+                        {loading ? (
+                            <div className="loading">Chargement...</div>
+                        ) : pendingUsers.length === 0 ? (
+                            <div className="no-data">
+                                Aucune demande en attente actuellement!
+                            </div>
+                        ) : (
+                            <div className="pending-users-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Email</th>
+                                            <th>Prénom</th>
+                                            <th>Nom</th>
+                                            <th>Téléphone</th>
+                                            <th>Rôle</th>
+                                            <th>Date d'inscription</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {pendingUsers.map((u, index) => (
+                                            <tr key={u.id}>
+                                                <td>{index + 1}</td>
+                                                <td><code>{u.email}</code></td>
+                                                <td>{u.firstName}</td>
+                                                <td>{u.lastName}</td>
+                                                <td>{u.phoneNumber || '-'}</td>
+                                                <td>
+                                                    <span className={`badge-role badge-role-${u.role.toLowerCase()}`}>
+                                                        {u.role}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {u.createdAt ? new Date(u.createdAt).toLocaleString('fr-FR') : '-'}
+                                                </td>
+                                                <td>
+                                                    <button 
+                                                        className="btn-validate"
+                                                        onClick={() => handleActivateUser(u.id)}
+                                                    >
+                                                        Valider
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {/* TAB 4: LISTE DES UTILISATEURS */}
                 {activeTab === 'users' && (
                     <section className="users-section">
                         <h2>Liste des Utilisateurs</h2>

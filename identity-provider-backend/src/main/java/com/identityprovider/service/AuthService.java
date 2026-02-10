@@ -46,7 +46,7 @@ public class AuthService {
         user.setLastName(request.getLastName());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setIsActive(true);
-        user.setIsBlocked(false);
+        user.setIsBlocked(true); // Bloqué en attente de validation par le manager
         user.setFailedLoginAttempts(0);
 
         // Définir le rôle sélectionné (par défaut USER si non spécifié)
@@ -62,13 +62,9 @@ public class AuthService {
 
         user = userRepository.save(user);
 
-        // Générer le token
-        String token = jwtTokenProvider.generateToken(user.getEmail(), user.getId());
-
-        // Créer la session
-        createSession(user, token);
-
-        return new AuthResponse(token, mapToUserResponse(user));
+        // Ne pas créer de session pour un compte en attente de validation
+        // Retourner une réponse sans token
+        return new AuthResponse(null, mapToUserResponse(user));
     }
 
     @Transactional
@@ -79,7 +75,7 @@ public class AuthService {
 
         // Vérifier si l'utilisateur est bloqué
         if (user.getIsBlocked()) {
-            throw new UserBlockedException("Votre compte est bloqué. Contactez l'administrateur.");
+            throw new UserBlockedException("Votre compte est en attente de validation par un manager. Vous ne pourrez vous connecter qu'après validation.");
         }
 
         // Vérifier le mot de passe
@@ -167,6 +163,22 @@ public class AuthService {
         return userRepository.findAll().stream()
                 .map(this::mapToUserResponse)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<UserResponse> getPendingUsers() {
+        return userRepository.findByIsBlocked(true).stream()
+                .map(this::mapToUserResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Transactional
+    public void activateUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
+
+        user.setIsBlocked(false);
+        user.setFailedLoginAttempts(0);
+        userRepository.save(user);
     }
 
     private void handleFailedLogin(User user) {

@@ -181,6 +181,90 @@
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
+/* PENDING USERS SECTION */
+.pending-users-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.pending-users-section h2 {
+    color: #1f2937;
+    font-size: 26px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.pending-description {
+    color: #6b7280;
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.pending-users-table {
+    overflow-x: auto;
+}
+
+.pending-users-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.pending-users-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.pending-users-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.pending-users-table tr:hover {
+    background: #f9fafb;
+}
+
+.pending-users-table code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #374151;
+}
+
+.btn-validate {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-validate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+.btn-validate:focus {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
 .loading,
 .no-data {
     text-align: center;
@@ -664,6 +748,15 @@
 
     .blocked-users-table th,
     .blocked-users-table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .pending-users-table table {
+        font-size: 0.9rem;
+    }
+
+    .pending-users-table th,
+    .pending-users-table td {
         padding: 0.75rem 0.5rem;
     }
 

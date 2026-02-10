@@ -34,7 +34,7 @@ function Register() {
         throw new Error('Le mot de passe doit contenir au moins 6 caractères');
       }
 
-      await authService.register(
+      const response = await authService.register(
         formData.email,
         formData.password,
         formData.firstName,
@@ -43,7 +43,14 @@ function Register() {
         formData.role
       );
 
-      navigate('/dashboard');
+      // Vérifier si le compte est en attente de validation (pas de token)
+      if (!response.token) {
+        alert('✅ Inscription réussie!\\n\\n📧 Votre demande a été envoyée avec succès.\\n\\n⏳ Votre compte est en attente de validation par un manager.\\n\\nVous recevrez un email de confirmation une fois votre compte validé et vous pourrez alors vous connecter.');
+        navigate('/login');
+      } else {
+        // Compte validé automatiquement (ne devrait pas arriver)
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.message || err.response?.data?.message || 'Erreur lors de l\'inscription');
     } finally {

@@ -15,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     java.util.List<User> findByIsBlocked(Boolean isBlocked);
+
+    java.util.List<User> findByIsActiveAndIsBlocked(Boolean isActive, Boolean isBlocked);
 }
